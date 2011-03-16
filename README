@@ -2,7 +2,7 @@
 
 -k field_name compare_method [-k ...]
 
-e.g. ./psort -k '@U:string' -k '@s:uint'
+e.g. ./psort -k '@U:' 'string' -k '@s:' 'uint'
 
 This configuration will let psort compare records with "@U:" 
 field in lexicalgraphical order, so call string comparison. 
