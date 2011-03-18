@@ -10,7 +10,8 @@ If this field of two records are equal, then psort will
 compare "@s:" fields numerically. Notice the order of -k 
 options is the preference of keys.
 
-See supported Type for more information about compare methods
+See supported Type for more information about compare 
+methods.
 
 2. Memory Limitation and Reservation
 
@@ -29,4 +30,40 @@ INT	- integer
 LLONG	- long long integer
 DOUBLE  - double float
 STR 	- string
+
+4. Pivot File
+
+After partitioning input data, a pivot file will be 
+genterated. Assume given command is
+
+./psort -k '@U:' 'STR' -k '@s:' 'UNIT'
+
+Format of pivot recored is as follows:
+
+@
+@U:string value
+@s:integer value
+@_pname:partition name
+
+The @_pname field refers to the partition contain records
+of keys ranged between the attched pivot record and next 
+pivot record.
+
+e.g. Let pivot file contains two pivot records such as:
+
+# pivot record #0
+@
+@U:abc
+@s:123
+@_pname:000.part
+# pivot record #1
+@
+@U:bcc
+@s:123
+@_pname:
+
+Records partitioned to 000.part are greater than pivot
+record #0 and less or equal to pivot record #1.
+Notice the last pivot record does not have corresponded
+partition file.
 
