@@ -1,7 +1,9 @@
 #include <cstring>
 #include <string>
 #include <cstdio>
+#include <algorithm>
 
+#include "rcmp.h"
 #include "GAISUtils/record.h"
 
 #define GB *(1024*1024*1024)
@@ -68,6 +70,7 @@ main(int argc, char ** argv)
 			}
 			printf("B\n");
 			i+=1;
+		// reserve
 		}else if(0 == strcmp(argv[i], "-r")){
 			if(argc <= i+1){
 				usage();
@@ -77,5 +80,36 @@ main(int argc, char ** argv)
 			RESERVE = (RESERVE <= 0 || RESERVE >= 100)?10 : RESERVE;
 			printf("Reserved for partition: %d%%\n", RESERVE);
 		}
+	}
+
+	try{
+
+		// sort testing
+		std::vector<record> rec(3, proto);
+
+		rec[0].get<std::string>("@U:") = "acer";
+		rec[0].get<unsigned int>("@s:") = 1234;
+
+		rec[1].get<std::string>("@U:") = "acer";
+		rec[1].get<unsigned int>("@s:") = 1235;
+
+		rec[2].get<std::string>("@U:") = "ace";
+		rec[2].get<unsigned int>("@s:") = 1234;
+
+
+		record_comparator rcmp;
+		char const* keys[3] = {"@U:", "@s:", 0};
+		rcmp.set_key_preference(&keys[0], &keys[2]);
+		std::sort(rec.begin(), rec.end(), rcmp);
+
+		for(int i=0;i<rec.size();++i){
+			printf("%s\t%d\n", 
+					rec[i].get<std::string>("@U:").c_str(), 
+					rec[i].get<unsigned int>("@s:")); 
+
+		}
+
+	}catch(char const* msg){
+		printf("%s\n", msg);
 	}
 }
