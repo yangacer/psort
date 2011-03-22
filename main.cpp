@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <algorithm>
 
+#include "strref.h"
 #include "rcmp.h"
 #include "GAISUtils/record.h"
 
@@ -19,6 +20,7 @@ main(int argc, char ** argv)
 {
 	// initiate field factory
 	init_field_factory();
+	field_factory::Instance().Register("STRREF", create_field<str_ref>());
 	record proto;
 	
 	// configuration variables
@@ -87,13 +89,13 @@ main(int argc, char ** argv)
 		// sort testing
 		std::vector<record> rec(3, proto);
 
-		rec[0].get<std::string>("@U:") = "acer";
+		rec[0].get<str_ref>("@U:").assign("acer", 4);
 		rec[0].get<unsigned int>("@s:") = 1234;
 
-		rec[1].get<std::string>("@U:") = "acer";
+		rec[1].get<str_ref>("@U:").assign("acer", 4);
 		rec[1].get<unsigned int>("@s:") = 1235;
 
-		rec[2].get<std::string>("@U:") = "ace";
+		rec[2].get<str_ref>("@U:").assign("ace", 3);
 		rec[2].get<unsigned int>("@s:") = 1234;
 
 
@@ -104,7 +106,7 @@ main(int argc, char ** argv)
 
 		for(int i=0;i<rec.size();++i){
 			printf("%s\t%d\n", 
-					rec[i].get<std::string>("@U:").c_str(), 
+					rec[i].get<str_ref>("@U:").data_, 
 					rec[i].get<unsigned int>("@s:")); 
 
 		}
@@ -112,4 +114,19 @@ main(int argc, char ** argv)
 	}catch(char const* msg){
 		printf("%s\n", msg);
 	}
+
+	char const* teststr = "abcab";
+	str_ref x(teststr, 3),
+		y(teststr+3, 2);
+
+	printf("x <  y: %d\n", x < y);
+	printf("x <= y: %d\n", x <= y);
+	
+	printf("x >  y: %d\n", x > y);
+	printf("x >= y: %d\n", x >= y);
+
+	printf("x == y: %d\n", x == y);
+	printf("x != y: %d\n", x != y);
+
+
 }
