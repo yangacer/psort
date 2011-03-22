@@ -30,6 +30,9 @@ INT	- integer
 LLONG	- long long integer
 DOUBLE  - double float
 STR 	- string
+STRREF*	- string reference for eliminating copy
+
+*Internal type supported by psort but not GAISUtils::record
 
 4. Pivot File
 

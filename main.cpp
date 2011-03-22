@@ -21,7 +21,7 @@ main(int argc, char ** argv)
 	// initiate field factory
 	init_field_factory();
 	field_factory::Instance().Register("STRREF", create_field<str_ref>());
-	record proto;
+	rschema schema;
 	
 	// configuration variables
 	unsigned int MAXMEM = 10 MB;
@@ -36,7 +36,7 @@ main(int argc, char ** argv)
 				exit(1);
 			}
 			try{
-				proto.define_field(argv[i+1], argv[i+2]);
+				schema.define_field(argv[i+1], argv[i+2]);
 			}catch(char *msg){
 				printf("psort: %s\n", msg);
 				usage();
@@ -87,6 +87,8 @@ main(int argc, char ** argv)
 	try{
 
 		// sort testing
+		record proto;
+		schema.make(proto);
 		std::vector<record> rec(3, proto);
 
 		rec[0].get<str_ref>("@U:").assign("acer", 4);
@@ -98,10 +100,12 @@ main(int argc, char ** argv)
 		rec[2].get<str_ref>("@U:").assign("ace", 3);
 		rec[2].get<unsigned int>("@s:") = 1234;
 
-
+		
+		
 		record_comparator rcmp;
 		char const* keys[3] = {"@U:", "@s:", 0};
 		rcmp.set_key_preference(&keys[0], &keys[2]);
+		
 		std::sort(rec.begin(), rec.end(), rcmp);
 
 		for(int i=0;i<rec.size();++i){
