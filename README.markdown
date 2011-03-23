@@ -5,7 +5,7 @@
 	e.g. ./psort -k '@U:' 'STR' -k '@s:' 'UNIT'
 
 	This configuration will let psort compare records with "@U:" 
-	field in *lexicalgraphical* order, so call string comparison. 
+	field in \*lexicographical\* order, so call string comparison. 
 	If this field of two records are equal, then psort will 
 	compare "@s:" fields numerically. *Notice* the order of -k 
 	options is the preference of keys.
