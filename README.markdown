@@ -5,13 +5,13 @@
 	e.g. ./psort -k '@U:' 'STR' -k '@s:' 'UNIT'
 
 	This configuration will let psort compare records with "@U:" 
-	field in lexicalgraphical order, so call string comparison. 
+	field in *lexicalgraphical* order, so call string comparison. 
 	If this field of two records are equal, then psort will 
-	compare "@s:" fields numerically. Notice the order of -k 
+	compare "@s:" fields numerically. *Notice* the order of -k 
 	options is the preference of keys.
 
-	See supported Type for more information about compare 
-	methods.
+	See section - Supported Type - for more information about 
+	compare methods.
 
 2. Memory Limitation and Reservation
 ====
@@ -24,7 +24,7 @@
 	in the first phase, to reduce probability of repartition.
 
 3. Supported Types
-
+====
 	UNIT 	- unsigned integer
 	INT	- integer
 	LLONG	- long long integer
@@ -35,7 +35,7 @@
 	*Internal type supported by psort but not GAISUtils::record
 
 4. Pivot File
-
+====
 	After partitioning input data, a pivot file will be 
 	genterated. Assume given command is
 
