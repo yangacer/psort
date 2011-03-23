@@ -59,8 +59,8 @@ str_ref::operator!=(str_ref const& rhs) const
 }
 
 
-std::istream &operator>>(std::istream& is, str_ref const& sref)
-{ return is;}
+//std::istream &operator>>(std::istream& is, str_ref const& sref)
+//{ return is;}
 
 std::ostream &operator<<(std::ostream& os, str_ref const& sref)
 {
