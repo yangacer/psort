@@ -91,15 +91,15 @@ main(int argc, char ** argv)
 		schema.make(proto);
 		std::vector<record> rec(3, proto);
 
-		rec[0].get<str_ref>("@U:").assign("acer", 4);
-		rec[0].get<unsigned int>("@s:") = 1234;
+		rec[0].fromString("@U:", "acer", 4);
+		rec[0].fromString("@s:", "1235");
 
-		rec[1].get<str_ref>("@U:").assign("acer", 4);
-		rec[1].get<unsigned int>("@s:") = 1235;
 
-		rec[2].get<str_ref>("@U:").assign("ace", 3);
-		rec[2].get<unsigned int>("@s:") = 1234;
+		rec[1].fromString("@U:", "acer", 4);
+		rec[1].fromString("@s:", "1234");
 
+		rec[2].fromString("@U:", "ace", 3);
+		rec[2].fromString("@s:", "12");
 		
 		
 		record_comparator rcmp;
@@ -109,10 +109,10 @@ main(int argc, char ** argv)
 		std::sort(rec.begin(), rec.end(), rcmp);
 
 		for(int i=0;i<rec.size();++i){
-			printf("%s\t%d\n", 
-					rec[i].get<str_ref>("@U:").data_, 
-					rec[i].get<unsigned int>("@s:")); 
-
+			printf( rec[i].toString("@U:").c_str() );
+			printf("\t");
+			printf( rec[i].toString("@s:").c_str() );
+			printf("\n");
 		}
 
 	}catch(char const* msg){
