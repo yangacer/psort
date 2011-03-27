@@ -1,17 +1,18 @@
 1. Multiple Keys and Compare Methods
 ====
-	-k field_name compare_method [-k ...]
+	-k field_name field_type compare_method [-k ...]
 
-	e.g. ./psort -k '@U:' 'STR' -k '@s:' 'UNIT'
+	e.g. ./psort -k '@U:' 'STR' '>' -k '@s:' 'UNIT' '<'
 
-This configuration will let psort compare records with "@U:" 
-field in __lexicographical__ order, so call string comparison. 
-If this field of two records are equal, then psort will 
-compare "@s:" fields numerically. __Notice__ the order of -k 
-options is the preference of keys.
+This configuration will let psort compare records' "@U:" 
+fields by string comparison in decending order. 
+If the field of two records are equal, then psort will 
+compare "@s:" fields by numerical comparison in accending 
+order.
+__Notice__ the order of -k options is the preference of keys.
 
 See section - Supported Type - for more information about 
-compare methods.
+field type.
 
 2. Memory Limitation and Reservation
 ====
