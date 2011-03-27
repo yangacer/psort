@@ -1,8 +1,30 @@
 #include "pmgr.h"
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <cstdio>
+#include <cstring>
+#include <cerrno>
+
 void
 partition_mgr::sampling(char const* input_file, rschema const& sche)
-{}
+{
+	struct stat stbuf;
+	if(0 > stat(input_file, &stbuf)){
+		perror("partition_mgr(sampling): ");
+		return;
+	}
+
+	unsigned long long size = stbuf.st_size;
+	unsigned int mem_avail = mem_limit_ - mem_limit_ * mem_reserve_ / 100;
+	printf( "input size: %llu\n"
+		"memory limitation: %lu\n"
+		"memory reservation: %lu%%\n"
+		"memory available: %lu\n"
+		"partition cnt: %llu\n", 
+		size, mem_limit_, mem_reserve_, mem_avail, size / mem_avail );
+		
+}
 
 void
 partition_mgr::dispatch(record const &r)

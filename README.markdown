@@ -70,3 +70,8 @@ Records partitioned to 000.part are less than pivot
 record #0. To records contained by 001.part, they are 
 greater or equal to pivot record #0.
 
+5. Input
+====
+	./psort [-f file]
+If [-f file] given, then psort read input data from file.
+Otherwise, it read input data from standard input.

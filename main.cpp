@@ -5,6 +5,7 @@
 
 #include "strref.h"
 #include "rcmp.h"
+#include "pmgr.h"
 #include "GAISUtils/record.h"
 
 #define GB *(1024*1024*1024)
@@ -22,6 +23,7 @@ main(int argc, char ** argv)
 	init_field_factory();
 	field_factory::Instance().Register("STRREF", create_field<str_ref>());
 	rschema schema;
+	record_comparator rcmp;
 	
 	// configuration variables
 	unsigned int MAXMEM = 10 MB;
@@ -37,6 +39,18 @@ main(int argc, char ** argv)
 			}
 			try{
 				schema.define_field(argv[i+1], argv[i+2]);
+				// key order checking
+				if(argc > i+3){
+					if(argv[i+3][0] == '<'){
+						rcmp.add_key(argv[i+1], true);
+						i++;
+					}else if(argv[i+3][0] == '>'){
+						rcmp.add_key(argv[i+1], false);
+						i++;
+					}else{
+						rcmp.add_key(argv[i+1]);	
+					}
+				}
 			}catch(char *msg){
 				printf("psort: %s\n", msg);
 				usage();
@@ -84,6 +98,10 @@ main(int argc, char ** argv)
 		}
 	}
 
+	// configure partition manager
+	partition_mgr pmgr;
+	pmgr.mem_limit(MAXMEM).mem_reserve(RESERVE);
+	
 	try{
 
 		// sort testing
@@ -101,11 +119,14 @@ main(int argc, char ** argv)
 		rec[2].fromString("@U:", "ace", 3);
 		rec[2].fromString("@s:", "12");
 		
-		
+		/*
 		record_comparator rcmp;
 		char const* keys[3] = {"@U:", "@s:", 0};
-		rcmp.set_key_preference(&keys[0], &keys[2]);
+		bool orders[3] = { true, false, false };
 		
+		rcmp.set_key_preference(&keys[0], &keys[2], &orders[0], &orders[2]);
+		*/
+
 		std::sort(rec.begin(), rec.end(), rcmp);
 
 		for(int i=0;i<rec.size();++i){
