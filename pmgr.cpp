@@ -6,9 +6,13 @@
 #include <cstring>
 #include <cerrno>
 
+#include "GAISUtils/rschema.h"
+#include "GAISUtils/rstream.h"
+
 void
-partition_mgr::sampling(char const* input_file, rschema const& sche)
+partition_mgr::sampling(irfstream &is, rschema const& sche)
 {
+	/*
 	struct stat stbuf;
 	if(0 > stat(input_file, &stbuf)){
 		perror("partition_mgr(sampling): ");
@@ -23,7 +27,7 @@ partition_mgr::sampling(char const* input_file, rschema const& sche)
 		"memory available: %lu\n"
 		"partition cnt: %llu\n", 
 		size, mem_limit_, mem_reserve_, mem_avail, size / mem_avail );
-		
+	*/	
 }
 
 void

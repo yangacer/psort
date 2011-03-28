@@ -5,8 +5,10 @@
 #include <string>
 #include <fstream>
 #include "GAISUtils/record.h"
-#include "GAISUtils/rschema.h"
+//#include "GAISUtils/rschema.h"
 
+class irfstream;
+struct rschema;
 
 struct partition_mgr
 {
@@ -17,7 +19,7 @@ struct partition_mgr
 	 *  @param sche Record schema for reading record accordingly
 	 */
 	void
-	sampling(char const* input_file, rschema const& sche);
+	sampling(irfstream &is, rschema const& sche);
 
 	/** Dispatch record to a partition
 	 */
