@@ -75,3 +75,11 @@ greater or equal to pivot record #0.
 	./psort [-f file]
 If [-f file] given, then psort read input data from file.
 Otherwise, it read input data from standard input.
+
+6. Record Begin Pattern
+====
+	./psort -b '@\n@GAIS_Rec:\n'
+Argument follows -b option will be used as record begin
+pattern. psort translates "\n" string to '\n' character
+automatically.
+
