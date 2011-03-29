@@ -2,12 +2,15 @@
 #include <string>
 #include <cstdio>
 #include <algorithm>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include "strref.h"
 #include "rcmp.h"
 #include "pmgr.h"
 #include "GAISUtils/record.h"
 #include "GAISUtils/rstream.h"
+#include "GAISUtils/rserialize.h"
 
 #define GB *(1024*1024*1024)
 #define MB *(1024*1024)
@@ -31,9 +34,10 @@ main(int argc, char ** argv)
 	irfstream irs("@\n@GAIS_Rec:\n", 13, stdin);
 	unsigned int MAXMEM = 10 MB;
 	unsigned int RESERVE = 10;
+	unsigned int FILE_SIZE = 0; // zero for unknow size
 
 	// ------------ parse arguments and configure -------------
-	for(int i=0; i< argc; ++i){
+	for(int i=1; i< argc; ++i){
 		// key 
 		if(0 == strcmp(argv[i], "-k")){
 			if(argc <= i+2){
@@ -124,6 +128,13 @@ main(int argc, char ** argv)
 				exit(1);
 			}
 			irs.close();
+			// get file size
+			struct stat statbuf;
+			if(0 < stat(argv[i+1], &statbuf)){
+				perror("psort(stat):");
+				exit(1);
+			}
+			FILE_SIZE = statbuf.st_size;
 			irs.open(argv[i+1], std::ios::binary | std::ios::in);
 			if(!irs.is_open()){
 				fprintf(stderr, "Open file (%s) failed\n", argv[i+1]);
@@ -141,6 +152,51 @@ main(int argc, char ** argv)
 	partition_mgr pmgr;
 	pmgr.mem_limit(MAXMEM).mem_reserve(RESERVE);
 	
+	// configure irfstream
+	unsigned int streambuf_size = 
+		(MAXMEM > 100) ? 
+			MAXMEM - MAXMEM / 100 * RESERVE :
+			MAXMEM - MAXMEM * RESERVE / 100;
+
+	char *streambuf = new char[streambuf_size];
+	if(0 == streambuf){
+		perror("psort(memory low):");
+		exit(1);
+	}
+	irs.rdbuf()->pubsetbuf(streambuf, streambuf_size);
+
+	// estimate partition count
+	unsigned int part_count = (FILE_SIZE == 0) ? 20 : FILE_SIZE / streambuf_size;
+	if(part_count * streambuf_size < FILE_SIZE)
+		part_count++;
+
+	// sampling stage (integrate into pmgr latter
+	char *pivotsBuf(0);
+	unsigned int pivotsBufSize(0);
+	unsigned int recSize(0);
+	char const* recData;
+	record rec;
+	schema.make(rec);
+	std::vector<record> pivots;
+	while(1){
+		recSize = irs.getrecord(&recData);
+		if(!irs.fail()){
+			// find fields and create record
+			pivots.push_back(rec);
+			fromGAISRecord(*(pivots.end()-1), recData, recSize);
+			pivotsBufSize += referenced_count(*(pivots.end()-1));
+		}else
+			break;
+	}
+	// copy data located in irs to pivotsBuf and change str_ref.data_
+	if(pivotsBufSize){
+		pivotsBuf = new char[pivotsBufSize+1];
+		unsigned int copied(0);
+		for(unsigned int i=0; i<pivots.size();++i)
+			copied += cp_chg_referenced(pivotsBuf + copied, pivots[i]);
+	}
+
+	// ----------- misc test --------------------------
 	try{
 
 		// sort testing
@@ -158,13 +214,7 @@ main(int argc, char ** argv)
 		rec[2].fromString("@U:", "ace", 3);
 		rec[2].fromString("@s:", "12");
 		
-		/*
-		record_comparator rcmp;
-		char const* keys[3] = {"@U:", "@s:", 0};
-		bool orders[3] = { true, false, false };
 		
-		rcmp.set_key_preference(&keys[0], &keys[2], &orders[0], &orders[2]);
-		*/
 
 		std::sort(rec.begin(), rec.end(), rcmp);
 
@@ -178,19 +228,5 @@ main(int argc, char ** argv)
 	}catch(char const* msg){
 		printf("%s\n", msg);
 	}
-
-	char const* teststr = "abcab";
-	str_ref x(teststr, 3),
-		y(teststr+3, 2);
-
-	printf("x <  y: %d\n", x < y);
-	printf("x <= y: %d\n", x <= y);
-	
-	printf("x >  y: %d\n", x > y);
-	printf("x >= y: %d\n", x >= y);
-
-	printf("x == y: %d\n", x == y);
-	printf("x != y: %d\n", x != y);
-
 
 }

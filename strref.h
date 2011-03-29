@@ -3,9 +3,12 @@
 
 #include <iosfwd>
 #include <cstring>
+#include <string>
 #include "GAISUtils/record.h"
 
 #define SIX_BOOL_OP_DECL(C,X) bool operator X (C const& rhs)const
+#define GLOBAL_SBOP_FUNC(T,U,X,Y) bool operator X \
+	(T const &lhs, U const &rhs){ return rhs Y lhs; }
 
 struct str_ref
 {
@@ -20,6 +23,13 @@ struct str_ref
 	SIX_BOOL_OP_DECL(str_ref,==);
 	SIX_BOOL_OP_DECL(str_ref,!=);
 	
+	SIX_BOOL_OP_DECL(std::string,>);
+	SIX_BOOL_OP_DECL(std::string,<);
+	SIX_BOOL_OP_DECL(std::string,>=);
+	SIX_BOOL_OP_DECL(std::string,<=);
+	SIX_BOOL_OP_DECL(std::string,==);
+	SIX_BOOL_OP_DECL(std::string,!=);
+
 	str_ref&
 	assign(char const* data, unsigned int size);
 
@@ -30,13 +40,30 @@ struct str_ref
 	unsigned int size_;
 };
 
+inline GLOBAL_SBOP_FUNC(std::string,str_ref,>,<)
+inline GLOBAL_SBOP_FUNC(std::string,str_ref,<,>)
+inline GLOBAL_SBOP_FUNC(std::string,str_ref,>=,<=)
+inline GLOBAL_SBOP_FUNC(std::string,str_ref,<=,>=)
+inline GLOBAL_SBOP_FUNC(std::string,str_ref,==,==)
+inline GLOBAL_SBOP_FUNC(std::string,str_ref,!=,!=)
+
+
 std::istream &operator>>(std::istream& is, str_ref const& sref);
 
 // std::ostream &operator<<(std::ostream& os, str_ref const& sref);
 
+unsigned int
+referenced_count(record const& r);
+
+unsigned int
+cp_chg_referenced(char *buf, record &r);
+
 template<>
 class field<str_ref> : public absField, public Loki::SmallObject<>
 {
+	friend unsigned int referenced_count(record const& r);
+	friend unsigned int cp_chg_referenced(char *buf, record &r);
+
 private: // Client never creates field object directly
 	friend class record;
 	template<class T1> friend struct create_field;

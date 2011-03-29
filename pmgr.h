@@ -3,11 +3,13 @@
 
 #include <vector>
 #include <string>
-#include <fstream>
-#include "GAISUtils/record.h"
+#include <iosfwd>
+//#include <fstream>
+//#include "GAISUtils/record.h"
 //#include "GAISUtils/rschema.h"
 
 class irfstream;
+struct record;
 struct rschema;
 
 struct partition_mgr
@@ -49,9 +51,9 @@ private:
 	unsigned int mem_limit_;
 	unsigned int mem_reserve_;
 	unsigned int part_cnt_;
-	std::vector<record> pivots_;
-	std::vector<std::string> part_names_;
-	std::vector<PartHandle> part_handles_;
+	std::vector<record> *pivots_;
+	std::vector<std::string> *part_names_;
+	std::vector<PartHandle> *part_handles_;
 };
 
 #endif

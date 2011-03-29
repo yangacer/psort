@@ -6,6 +6,8 @@
 #include <cstring>
 #include <cerrno>
 
+#include <fstream>
+
 #include "GAISUtils/rschema.h"
 #include "GAISUtils/rstream.h"
 
