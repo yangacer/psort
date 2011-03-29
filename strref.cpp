@@ -111,6 +111,7 @@ referenced_count(record const& r)
 		p = dynamic_cast<field<str_ref>*>(*iter);
 		if(p)
 			size += p->val_.size_;
+		++iter;
 	}
 	return size;
 }
@@ -128,6 +129,7 @@ cp_chg_referenced(char *buf, record &r)
 			(*iter)->fromString(buf+size, p->val_.size_);
 			size += p->val_.size_;
 		}
+		++iter;
 	}
 	return size;
 }

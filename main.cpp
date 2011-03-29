@@ -31,7 +31,8 @@ main(int argc, char ** argv)
 	rschema schema;
 	record_comparator rcmp;
 
-	irfstream irs("@\n@GAIS_Rec:\n", 13, stdin);
+	irfstream irs; //("@\n@GAIS_Rec:\n", 13, stdin);
+
 	unsigned int MAXMEM = 10 MB;
 	unsigned int RESERVE = 10;
 	unsigned int FILE_SIZE = 0; // zero for unknow size
@@ -145,6 +146,11 @@ main(int argc, char ** argv)
 		}
 	} // ------------- End of command parsing -----------------
 	
+	if(FILE_SIZE == 0){
+		printf("-f file\n");
+		exit(1);
+	}
+
 	// Setup status
 	printf("Record begin pattern: %s\n", irs.begin_pattern());
 
@@ -185,8 +191,10 @@ main(int argc, char ** argv)
 			pivots.push_back(rec);
 			fromGAISRecord(*(pivots.end()-1), recData, recSize);
 			pivotsBufSize += referenced_count(*(pivots.end()-1));
+		
 		}else
 			break;
+		
 	}
 	// copy data located in irs to pivotsBuf and change str_ref.data_
 	if(pivotsBufSize){
@@ -194,6 +202,7 @@ main(int argc, char ** argv)
 		unsigned int copied(0);
 		for(unsigned int i=0; i<pivots.size();++i)
 			copied += cp_chg_referenced(pivotsBuf + copied, pivots[i]);
+		printf("%s\n",pivotsBuf);
 	}
 
 	// ----------- misc test --------------------------
