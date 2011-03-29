@@ -83,7 +83,7 @@ If [-f file] given, then psort read input data from file.
 
 (*)__Current version does not support stdin source__
 
-7. Record Begin Pattern
+6. Record Begin Pattern
 ====
 	./psort -b '@\n@GAIS_Rec:\n'
 Argument follows -b option will be used as record begin
