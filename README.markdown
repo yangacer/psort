@@ -35,10 +35,10 @@ in the first phase, to reduce probability of repartition.
 
 	*Internal type supported by psort but not GAISUtils::record
 
-4. Pivot File
+4. Output - Pivot File and Part File
 ====
-After partitioning input data, a pivot file will be 
-genterated. Assume given command is
+After partitioning input data, a pivot file - pivot.file
+will be genterated. Assume given command is
 
 	./psort -k '@U:' 'STR' -k '@s:' 'UNIT'
 
@@ -77,7 +77,7 @@ If [-f file] given, then psort read input data from file.
 
 (*)__Current version does not support stdin source__
 
-6. Record Begin Pattern
+7. Record Begin Pattern
 ====
 	./psort -b '@\n@GAIS_Rec:\n'
 Argument follows -b option will be used as record begin
