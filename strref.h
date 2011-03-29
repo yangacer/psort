@@ -36,6 +36,9 @@ struct str_ref
 	str_ref&
 	assign(char const* data_beg, char const* data_end);
 
+	void
+	clear();
+
 	char const* data_;
 	unsigned int size_;
 };
@@ -48,9 +51,9 @@ inline GLOBAL_SBOP_FUNC(std::string,str_ref,==,==)
 inline GLOBAL_SBOP_FUNC(std::string,str_ref,!=,!=)
 
 
-std::istream &operator>>(std::istream& is, str_ref const& sref);
+//std::istream &operator>>(std::istream& is, str_ref const& sref);
 
-// std::ostream &operator<<(std::ostream& os, str_ref const& sref);
+std::ostream &operator<<(std::ostream& os, str_ref const& sref);
 
 unsigned int
 referenced_count(record const& r);
@@ -124,6 +127,13 @@ private: // Client never creates field object directly
 	toString() const 
 	{
 		return std::string(val_.data_, val_.size_);
+	}
+
+	std::ostream&
+	writeTo(std::ostream& os) const
+	{	
+		os.write(val_.data_, val_.size_);
+		return os;
 	}
 
 	str_ref val_;

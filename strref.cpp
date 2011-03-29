@@ -24,6 +24,9 @@ str_ref&
 str_ref::assign(char const* data_beg, char const* data_end)
 {	data_ = data_beg; size_ = data_end - data_beg;	}
 
+void
+str_ref::clear()
+{ data_ = 0; size_ = 0; }
 
 bool 
 str_ref::operator>(str_ref const& rhs) const
@@ -126,7 +129,8 @@ cp_chg_referenced(char *buf, record &r)
 		p = dynamic_cast<field<str_ref>*>(*iter);
 		if(p){
 			memcpy(buf + size, p->val_.data_, p->val_.size_);
-			(*iter)->fromString(buf+size, p->val_.size_);
+			//(*iter)->fromString(buf+size, p->val_.size_);
+			p->val_.data_ = buf + size;
 			size += p->val_.size_;
 		}
 		++iter;
