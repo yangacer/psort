@@ -9,6 +9,7 @@ fields by string comparison in decending order.
 If the field of two records are equal, then psort will 
 compare "@s:" fields by numerical comparison in accending 
 order.
+
 __Notice__ the order of -k options is the preference of keys.
 
 See section - Supported Type - for more information about 
@@ -33,7 +34,8 @@ in the first phase, to reduce probability of repartition.
 	STR 	- string
 	STRREF*	- string reference for eliminating copy
 
-*Internal type supported by psort but not GAISUtils::record
+*Internal type supported by psort but not GAISUtils::record.
+
 __Notice__ the STR type introduces greater data movement due
 to copy semantic maintainence. In case of psort, __STRREF__ is 
 recommanded.
@@ -67,6 +69,7 @@ e.g. Let pivot file contains two pivot records such as:
 
 This pivot file corresponds to three .part files - 
 0.part, 1.part, and 2.part.
+
 Records partitioned to 0.part are less than pivot
 record #0. To records contained by 1.part, they are 
 greater or equal to pivot record #0. Vice versa
@@ -76,7 +79,7 @@ record in 2.part are greater tan pivot record #1.
 ====
 	./psort [-f file]
 If [-f file] given, then psort read input data from file.
-*Otherwise, it read input data from standard input.
+(*)Otherwise, it read input data from standard input.
 
 (*)__Current version does not support stdin source__
 
