@@ -33,7 +33,10 @@ in the first phase, to reduce probability of repartition.
 	STR 	- string
 	STRREF*	- string reference for eliminating copy
 
-	*Internal type supported by psort but not GAISUtils::record
+*Internal type supported by psort but not GAISUtils::record
+__Notice__ the STR type introduces greater data movement due
+to copy semantic maintainence. In case of psort, __STRREF__ is 
+recommanded.
 
 4. Output - Pivot File and Part File
 ====
