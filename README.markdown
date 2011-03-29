@@ -57,24 +57,25 @@ e.g. Let pivot file contains two pivot records such as:
 	@
 	@U:abc
 	@s:123
-	@_LTpart:000.part
-	@_GEpart:001.part
 	# pivot record #1
 	@
 	@U:bcc
 	@s:123
-	@_LTpart:001.part
-	@_GEpart:002.part
 
-Records partitioned to 000.part are less than pivot
-record #0. To records contained by 001.part, they are 
-greater or equal to pivot record #0.
+This pivot file corresponds to three .part files - 
+0.part, 1.part, and 2.part.
+Records partitioned to 0.part are less than pivot
+record #0. To records contained by 1.part, they are 
+greater or equal to pivot record #0. Vice versa
+record in 2.part are greater tan pivot record #1.
 
 5. Input
 ====
 	./psort [-f file]
 If [-f file] given, then psort read input data from file.
-Otherwise, it read input data from standard input.
+*Otherwise, it read input data from standard input.
+
+(*)__Current version does not support stdin source__
 
 6. Record Begin Pattern
 ====
