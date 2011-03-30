@@ -240,7 +240,7 @@ main(int argc, char ** argv)
 		irs.ignore(irs.rdbuf()->in_avail());
 		if(!irs.eof())
 			pivots.pop_back();
-		std::cout<<str_ref(pivotsBuf, pivotsBufSize)<<"\n";
+		// std::cout<<str_ref(pivotsBuf, pivotsBufSize)<<"\n";
 	}
 	
 	sort(pivots.begin(), pivots.end(), rcmp);
@@ -279,6 +279,7 @@ main(int argc, char ** argv)
 
 	// dispatch record to partition
 	unsigned long long readCnt(0);
+	unsigned int begPatSize = strlen(irs.begin_pattern());
 	schema.define_field("_raw", "STRREF");
 	schema.make(rec);
 	while(1){
@@ -292,34 +293,62 @@ main(int argc, char ** argv)
 			// store pointer to full record if one-pass sort is satisfied
 			last.get<str_ref>("_raw").assign(recData, recSize);
 			
-			readCnt += recSize;
+			readCnt += recSize + begPatSize;
 		}else{
 			// dispatch in-buffer records
 			std::vector<record>::iterator iter = in_mem_rec.begin(), upper;
 			for(;iter != in_mem_rec.end();++iter){
 				upper = std::upper_bound(pivots.begin(), pivots.end(), *iter, rcmp);
+				
+				/*
 				std::cout<<iter->get<str_ref>("_raw");
-
 				if(upper != pivots.end()){
 					std::cout<<"\n===is less than====="<<
 						upper->get<str_ref>("@U:")<<"\n"; 
 					std::cout<<"("<<rcmp(*iter, *upper)<<")"<<"\n\n";
 				}else
 					std::cout<<"\n===is the greatest\n\n";
+				*/
 
+				// write to file
 				(*fouts[upper - pivots.begin()]) << 
 					irs.begin_pattern()<<
 					(iter->get<str_ref>("_raw"));
 			}
+
+			// flush stream
 			in_mem_rec.clear();
 			irs.clear();
-			irs.ignore(readCnt);
+			irs.seekg(readCnt, std::ios::cur);
+			irs.research();
 			readCnt = 0;
-			break;	
+			
+			// test successive fail
+			recSize = irs.getrecord(&recData);
+			if(irs.fail()){
+				if(recSize && irs.rdbuf()->in_avail() + 1 < streambuf_size){
+					record tmp(rec);
+					fromGAISRecord(tmp, recData, recSize);
+					tmp.get<str_ref>("_raw").assign(recData, recSize);
+					upper = std::upper_bound(pivots.begin(), pivots.end(), tmp, rcmp);
+					
+					// write to file
+					
+					(*fouts[upper - pivots.begin()]) << 
+						irs.begin_pattern()<<
+						tmp.get<str_ref>("_raw");
+						
+
+				}else{
+					fprintf(stderr, "psort: Record size exceeds max memory limitation\n");
+					exit(1);
+				}
+				break;	
+			}
 		}
 	}
 
-	// free stage
+	// ------------- free stage ---------------------
 	for(int i=0; i< fouts.size(); ++i){
 		fouts[i]->close();
 		delete fouts[i];
