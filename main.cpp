@@ -36,6 +36,7 @@ main(int argc, char ** argv)
 	record_comparator rcmp;
 	
 	irfstream irs; //("@\n@GAIS_Rec:\n", 13, stdin);
+	irs.begin_pattern("@\n",2);
 
 	unsigned int MAXMEM = 10 MB;
 	unsigned int RESERVE = 10;
