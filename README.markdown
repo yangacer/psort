@@ -42,9 +42,12 @@ recommanded.
 
 4. Output - Pivot File and Part File
 ====
-After partitioning input data, a pivot file - pivot.file
-will be genterated. Assume given command is
+	-p file -P prefix
+After partitioning input data, a pivot file - default name is 
+pv.file - will be genterated. If given -p option, the file will 
+be used as name of pivot file instead.
 
+Assume given command is
 	./psort -k '@U:' 'STR' -k '@s:' 'UNIT'
 
 Format of pivot recored is as follows:
@@ -52,9 +55,6 @@ Format of pivot recored is as follows:
 	@
 	@U:string value
 	@s:integer value
-	@_LTpart:less than partition file
-	@_GEpart:greater-or-equal=to partition file
-
 
 e.g. Let pivot file contains two pivot records such as:
 
