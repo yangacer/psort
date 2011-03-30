@@ -72,8 +72,8 @@ This pivot file corresponds to three .part files -
 
 Records partitioned to 0.part are less than pivot
 record #0. To records contained by 1.part, they are 
-greater or equal to pivot record #0. Vice versa
-record in 2.part are greater tan pivot record #1.
+greater or equal to pivot record #0. Vice versa, 
+record in 2.part are greater than pivot record #1.
 
 5. Input
 ====

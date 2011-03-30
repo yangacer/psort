@@ -207,11 +207,12 @@ main(int argc, char ** argv)
 		
 		// find fields and create record
 		pivots.push_back(rec);
-		fromGAISRecord(*(pivots.end()-1), recData, recSize);
-		pivotsBufSize += referenced_count(*(pivots.end()-1));
+		record& last(*(pivots.end()-1));
+		fromGAISRecord(last, recData, recSize);
+		pivotsBufSize += referenced_count(last);
 		
 		// store pointer to full record if one-pass sort is satisfied
-		(pivots.end()-1)->get<str_ref>("_raw").assign(recData, recSize);
+		last.get<str_ref>("_raw").assign(recData, recSize);
 
 		if(irs.fail()){
 			// input data size < MAXMEM
@@ -285,10 +286,11 @@ main(int argc, char ** argv)
 		if(!irs.fail()){
 			// find fields and create record
 			in_mem_rec.push_back(rec);
-			fromGAISRecord(*(in_mem_rec.end()-1), recData, recSize);
+			record &last(*(in_mem_rec.end()-1));
+			fromGAISRecord(last, recData, recSize);
 
 			// store pointer to full record if one-pass sort is satisfied
-			(in_mem_rec.end()-1)->get<str_ref>("_raw").assign(recData, recSize);
+			last.get<str_ref>("_raw").assign(recData, recSize);
 			
 			readCnt += recSize;
 		}else{
@@ -296,6 +298,15 @@ main(int argc, char ** argv)
 			std::vector<record>::iterator iter = in_mem_rec.begin(), upper;
 			for(;iter != in_mem_rec.end();++iter){
 				upper = std::upper_bound(pivots.begin(), pivots.end(), *iter, rcmp);
+				std::cout<<iter->get<str_ref>("_raw");
+
+				if(upper != pivots.end()){
+					std::cout<<"\n===is less than====="<<
+						upper->get<str_ref>("@U:")<<"\n"; 
+					std::cout<<"("<<rcmp(*iter, *upper)<<")"<<"\n\n";
+				}else
+					std::cout<<"\n===is the greatest\n\n";
+
 				(*fouts[upper - pivots.begin()]) << 
 					irs.begin_pattern()<<
 					(iter->get<str_ref>("_raw"));

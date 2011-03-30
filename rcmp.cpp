@@ -50,7 +50,7 @@ record_comparator::operator()(record const &lhs, record const &rhs) const
 			return orders_[i] ? true : false;
 		++i;
 	}
-	
+	return false;
 }
 
 void
