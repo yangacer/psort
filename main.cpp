@@ -186,13 +186,14 @@ main(int argc, char ** argv)
 	schema.define_field("_raw", "STRREF");
 
 	// estimate partition count
-	unsigned int part_count = (FILE_SIZE == 0) ? 20 : FILE_SIZE / streambuf_size;
-	if(part_count * streambuf_size < FILE_SIZE)
-		part_count++;
+	unsigned int pivots_count = FILE_SIZE / streambuf_size;
+	if(pivots_count * streambuf_size < FILE_SIZE)
+		pivots_count++;
 
-	printf(	"MAXMEM: %lu\t"
+	printf(	"PIVOTS_CNT: %lu\t"
+		"MAXMEM: %lu\t"
 		"RESERVE: %lu\t"
-		"STREAM SIZE: %lu\n", MAXMEM, RESERVE, streambuf_size);
+		"STREAM SIZE: %lu\n", pivots_count, MAXMEM, RESERVE, streambuf_size);
 
 	// ------------- sampling stage (integrate into pmgr latter ---------------
 	char *pivotsBuf(0);
@@ -215,7 +216,7 @@ main(int argc, char ** argv)
 		// store pointer to full record if one-pass sort is satisfied
 		last.get<str_ref>("_raw").assign(recData, recSize);
 
-		if(irs.fail()){
+		if( pivots.size() > pivots_count || irs.fail()){
 			// input data size < MAXMEM
 			if(irs.rdbuf()->in_avail() + 1 < streambuf_size){
 				// sort and output
@@ -243,7 +244,9 @@ main(int argc, char ** argv)
 			pivots.pop_back();
 		// std::cout<<str_ref(pivotsBuf, pivotsBufSize)<<"\n";
 	}
-	
+
+	std::cout<<pivots.size()<<" pivots generated\n";
+
 	sort(pivots.begin(), pivots.end(), rcmp);
 	
 	// undefine _raw field for output pivots
@@ -257,7 +260,7 @@ main(int argc, char ** argv)
 
 	// ------------------ partition stage -------------------
 
-	std::vector<std::ofstream*> fouts(pivots.size()+1);
+	std::vector<std::fstream*> fouts(pivots.size()+1);
 	std::vector<record> in_mem_rec;
 
 	// reset irs
@@ -270,9 +273,11 @@ main(int argc, char ** argv)
 	std::stringstream cvt;
 	for(int i=0; i<fouts.size(); i++){
 		cvt<<std::setw(fname_digits)<<std::setfill('0')<<i<<".part";
-		fouts[i] = new std::ofstream(cvt.str().c_str(), std::ios::binary);
+		fouts[i] = new std::fstream(cvt.str().c_str(), 
+			std::ios::binary | std::ios::trunc | std::ios::in | std::ios::out);
+		std::cout<<cvt.str()<<"\n";
 		if(!fouts[i]->is_open()){
-			perror("psort(open partition):");
+			perror("psort(open partition)");
 			exit(1);
 		}
 		cvt.str("");
