@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <iostream>
 #include <sstream>
+#include <limits>
 #include <iomanip>
 #include <algorithm>
 #include <sys/types.h>
@@ -190,6 +191,10 @@ main(int argc, char ** argv)
 	if(pivots_count * streambuf_size < FILE_SIZE)
 		pivots_count++;
 
+	// in-memory sortable checking
+	if(streambuf_size > FILE_SIZE)
+		pivots_count = std::numeric_limits<unsigned int>::max();
+
 	printf(	"PIVOTS_CNT: %lu\t"
 		"MAXMEM: %lu\t"
 		"RESERVE: %lu\t"
@@ -306,16 +311,6 @@ main(int argc, char ** argv)
 			for(;iter != in_mem_rec.end();++iter){
 				upper = std::upper_bound(pivots.begin(), pivots.end(), *iter, rcmp);
 				
-				/*
-				std::cout<<iter->get<str_ref>("_raw");
-				if(upper != pivots.end()){
-					std::cout<<"\n===is less than====="<<
-						upper->get<str_ref>("@U:")<<"\n"; 
-					std::cout<<"("<<rcmp(*iter, *upper)<<")"<<"\n\n";
-				}else
-					std::cout<<"\n===is the greatest\n\n";
-				*/
-
 				// write to file
 				(*fouts[upper - pivots.begin()]) << 
 					irs.begin_pattern()<<
