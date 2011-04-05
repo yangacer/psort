@@ -265,7 +265,7 @@ main(int argc, char ** argv)
 
 	// ------------------ partition stage -------------------
 
-	std::vector<std::fstream*> fouts(pivots.size()+1);
+	std::vector<rfstream*> fouts(pivots.size()+1);
 	std::vector<record> in_mem_rec;
 
 	// reset irs
@@ -278,7 +278,7 @@ main(int argc, char ** argv)
 	std::stringstream cvt;
 	for(int i=0; i<fouts.size(); i++){
 		cvt<<std::setw(fname_digits)<<std::setfill('0')<<i<<".part";
-		fouts[i] = new std::fstream(cvt.str().c_str(), 
+		fouts[i] = new rfstream(irs.begin_pattern(), irs.psize(), cvt.str().c_str(), 
 			std::ios::binary | std::ios::trunc | std::ios::in | std::ios::out);
 		std::cout<<cvt.str()<<"\n";
 		if(!fouts[i]->is_open()){
