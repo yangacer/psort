@@ -1,5 +1,6 @@
 #include "rcmp.h"
 
+int rcmp_cp_cnt(0);
 
 
 void

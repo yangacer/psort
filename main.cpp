@@ -167,7 +167,7 @@ main(int argc, char ** argv)
 			MAXMEM - MAXMEM / 100 * RESERVE :
 			MAXMEM - MAXMEM * RESERVE / 100;
 
-	char *streambuf = new char[streambuf_size];
+	char *streambuf = new char[MAXMEM];
 	if(0 == streambuf){
 		perror("psort(memory low):");
 		exit(1);
@@ -225,7 +225,8 @@ main(int argc, char ** argv)
 			// input data size < MAXMEM
 			if(irs.rdbuf()->in_avail() + 1 < streambuf_size){
 				// sort and output
-				sort(pivots.begin(), pivots.end(), rcmp);
+				std::sort(pivots.begin(), pivots.end(), 
+					FunctorWrapper<record_comparator>(rcmp));
 				for(unsigned int i=0; i<pivots.size();++i)
 					std::cout<<pivots[i].get<str_ref>("_raw");	
 				
@@ -252,7 +253,7 @@ main(int argc, char ** argv)
 
 	std::cout<<pivots.size()<<" pivots generated\n";
 
-	sort(pivots.begin(), pivots.end(), rcmp);
+	std::sort(pivots.begin(), pivots.end(), FunctorWrapper<record_comparator>(rcmp));
 	
 	// undefine _raw field for output pivots
 	schema.undefine_field("_raw");
@@ -265,7 +266,8 @@ main(int argc, char ** argv)
 
 	// ------------------ partition stage -------------------
 
-	std::vector<rfstream*> fouts(pivots.size()+1);
+	std::vector<std::ofstream*> fouts(pivots.size()+1);
+	std::vector<std::string> fnames;
 	std::vector<record> in_mem_rec;
 
 	// reset irs
@@ -278,19 +280,18 @@ main(int argc, char ** argv)
 	std::stringstream cvt;
 	for(int i=0; i<fouts.size(); i++){
 		cvt<<std::setw(fname_digits)<<std::setfill('0')<<i<<".part";
-		fouts[i] = new rfstream(irs.begin_pattern(), irs.psize(), cvt.str().c_str(), 
-			std::ios::binary | std::ios::trunc | std::ios::in | std::ios::out);
-		std::cout<<cvt.str()<<"\n";
+		fouts[i] = new std::ofstream(cvt.str().c_str(), std::ios::binary | std::ios::trunc | std::ios::out);
+		//std::cout<<cvt.str()<<"\n";
 		if(!fouts[i]->is_open()){
 			perror("psort(open partition)");
 			exit(1);
 		}
+		fnames.push_back(cvt.str());
 		cvt.str("");
 	}
 
 	// dispatch record to partition
 	unsigned long long readCnt(0);
-	unsigned int begPatSize = strlen(irs.begin_pattern());
 	schema.define_field("_raw", "STRREF");
 	schema.make(rec);
 	while(1){
@@ -304,12 +305,13 @@ main(int argc, char ** argv)
 			// store pointer to full record if one-pass sort is satisfied
 			last.get<str_ref>("_raw").assign(recData, recSize);
 			
-			readCnt += recSize + begPatSize;
+			readCnt += recSize + irs.psize();
 		}else{
 			// dispatch in-buffer records
 			std::vector<record>::iterator iter = in_mem_rec.begin(), upper;
 			for(;iter != in_mem_rec.end();++iter){
-				upper = std::upper_bound(pivots.begin(), pivots.end(), *iter, rcmp);
+				upper = std::upper_bound(pivots.begin(), pivots.end(), *iter, 
+					FunctorWrapper<record_comparator>(rcmp));
 				
 				// write to file
 				(*fouts[upper - pivots.begin()]) << 
@@ -338,8 +340,13 @@ main(int argc, char ** argv)
 					(*fouts[upper - pivots.begin()]) << 
 						irs.begin_pattern()<<
 						tmp.get<str_ref>("_raw");
-						
-
+					// output size report	
+					for(int i=0;i<fouts.size();++i){
+						printf("%s:\t" "%lu\t" "%f\n", 
+							fnames[i].c_str(), 
+							(size_t)fouts[i]->tellp(), 
+							(size_t)fouts[i]->tellp()/(double)MAXMEM);
+					}
 				}else{
 					fprintf(stderr, "psort: Record size exceeds max memory limitation\n");
 					exit(1);
@@ -349,12 +356,66 @@ main(int argc, char ** argv)
 		}
 	}
 
-	// ------------- free stage ---------------------
+	// ------------- internal sorting stage --------
+	
+	fprintf(stderr, "We assume no repartition in current version!\n");
+	
+	// close and free part files
 	for(int i=0; i< fouts.size(); ++i){
 		fouts[i]->close();
 		delete fouts[i];
 		fouts[i] = 0;
 	}
+	fouts.clear();
+	
+	// cleanup structures will be used
+	irs.close();
+	in_mem_rec.clear();
+	
+	// setup new buffer size
+	streambuf_size = MAXMEM;
+	irs.rdbuf()->pubsetbuf(streambuf, streambuf_size);
+
+	std::ofstream output("output.file", std::ios::out | std::ios::trunc | std::ios::binary);
+
+	// read records
+	for(int i=0; i<fnames.size(); ++i){
+		irs.open(fnames[i].c_str(), std::ios::binary);
+		if(!irs.is_open()){
+			perror("psort(open part file)");
+			exit(1);
+		}
+		while(1){
+			recSize = irs.getrecord(&recData);
+			in_mem_rec.push_back(rec);
+			record &last(*(in_mem_rec.end()-1));
+			fromGAISRecord(last, recData, recSize);
+			
+			// store pointer to full record if one-pass sort is satisfied
+			last.get<str_ref>("_raw").assign(recData, recSize);
+
+			if(irs.fail()){
+				// sort and output
+				std::stable_sort(in_mem_rec.begin(), in_mem_rec.end(), 
+					FunctorWrapper<record_comparator>(rcmp));
+
+				std::vector<record>::iterator iter = in_mem_rec.begin();
+				while(iter != in_mem_rec.end()){
+					output<<irs.begin_pattern()<<
+						iter->get<str_ref>("_raw");
+					++iter;	
+				}
+				in_mem_rec.clear();
+				break;	
+			}
+
+		}
+		irs.close();
+	}
+	output.close();
+
+	// ------------- free stage ---------------------
+	
 
 	if(pivotsBuf){
 		delete [] pivotsBuf;	
