@@ -216,7 +216,7 @@ main(int argc, char ** argv)
 		if(pivots.size() > pivots_count){
 			// select a victim pivot and remove it
 			unsigned int victim = rand() % (pivots.size());
-			// pivotsBufSize -= referenced_count(pivots[victim]);
+			pivotsBufSize -= referenced_count(pivots[victim]);
 			pivots.erase(pivots.begin()+victim);
 		}
 
@@ -229,9 +229,12 @@ main(int argc, char ** argv)
 		pivotsBufSize += referenced_count(last);
 		
 		// store pointer to full record if one-pass sort is satisfied
-		last.get<str_ref>("_raw").assign(recData, recSize);
+		// last.get<str_ref>("_raw").assign(recData, recSize);
 
 		if( irs.fail()){
+			
+			// remove in-mem sort due to fucking _raw field
+			/*
 			// input data size < MAXMEM
 			if(irs.rdbuf()->in_avail() + 1 < streambuf_size){
 				// sort and output
@@ -242,6 +245,7 @@ main(int argc, char ** argv)
 				
 				return 0;
 			}
+			*/
 			break;
 		}
 		
@@ -266,7 +270,7 @@ main(int argc, char ** argv)
 	std::sort(pivots.begin(), pivots.end(), FunctorWrapper<record_comparator>(rcmp));
 	
 	// undefine _raw field for output pivots
-	schema.undefine_field("_raw");
+	// schema.undefine_field("_raw");
 	
 	std::ofstream pvfile("pv.file", std::ios::binary);
 	for(int i=0;i<pivots.size();++i){
@@ -301,10 +305,12 @@ main(int argc, char ** argv)
 		fnames.push_back(cvt.str());
 		cvt.str("");
 	}
+	
+	// TODO Rewrite this part
 
 	// dispatch record to partition
 	unsigned long long readCnt(0);
-	schema.define_field("_raw", "STRREF");
+	//schema.define_field("_raw", "STRREF");
 	schema.make(rec);
 	while(1){
 		recSize = irs.getrecord(&recData);
