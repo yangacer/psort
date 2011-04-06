@@ -208,20 +208,30 @@ main(int argc, char ** argv)
 	record rec;
 	schema.make(rec);
 	std::vector<record> pivots;
+	srand(time(0));
 
 	while(1){
 		recSize = irs.getrecord(&recData);
 		
+		if(pivots.size() > pivots_count){
+			// select a victim pivot and remove it
+			unsigned int victim = rand() % (pivots.size());
+			// pivotsBufSize -= referenced_count(pivots[victim]);
+			pivots.erase(pivots.begin()+victim);
+		}
+
 		// find fields and create record
 		pivots.push_back(rec);
 		record& last(*(pivots.end()-1));
 		fromGAISRecord(last, recData, recSize);
+		
+		
 		pivotsBufSize += referenced_count(last);
 		
 		// store pointer to full record if one-pass sort is satisfied
 		last.get<str_ref>("_raw").assign(recData, recSize);
 
-		if( pivots.size() > pivots_count || irs.fail()){
+		if( irs.fail()){
 			// input data size < MAXMEM
 			if(irs.rdbuf()->in_avail() + 1 < streambuf_size){
 				// sort and output
@@ -263,6 +273,8 @@ main(int argc, char ** argv)
 		pvfile<<irs.begin_pattern();
 		toGAISRecord(pivots[i], pvfile);
 	}
+	pvfile.close();
+	printf("psort: Pivots file generated\n");
 
 	// ------------------ partition stage -------------------
 
@@ -296,6 +308,7 @@ main(int argc, char ** argv)
 	schema.make(rec);
 	while(1){
 		recSize = irs.getrecord(&recData);
+		// std::cout<<"first record head ----------\n"<<str_ref(recData, 100)<<std::endl;
 		if(!irs.fail()){
 			// find fields and create record
 			in_mem_rec.push_back(rec);
@@ -325,9 +338,9 @@ main(int argc, char ** argv)
 			irs.seekg(readCnt, std::ios::cur);
 			irs.research();
 			readCnt = 0;
-			
 			// test successive fail
 			recSize = irs.getrecord(&recData);
+			// std::cout<<"recData after failed ---------------\n"<<str_ref(recData, 100)<<std::endl;
 			if(irs.fail()){
 				if(recSize && irs.rdbuf()->in_avail() + 1 < streambuf_size){
 					record tmp(rec);
@@ -342,16 +355,33 @@ main(int argc, char ** argv)
 						tmp.get<str_ref>("_raw");
 					// output size report	
 					for(int i=0;i<fouts.size();++i){
+						double fraction = (size_t)fouts[i]->tellp()/(double)MAXMEM;
 						printf("%s:\t" "%lu\t" "%f\n", 
 							fnames[i].c_str(), 
 							(size_t)fouts[i]->tellp(), 
-							(size_t)fouts[i]->tellp()/(double)MAXMEM);
+							fraction);
+						if(fraction>1){
+							fprintf(stderr,"%s needs to be repartition\n", fnames[i].c_str());
+							exit(1);
+						}
 					}
+					fprintf(stderr, "psort: Partition done.\n");
 				}else{
 					fprintf(stderr, "psort: Record size exceeds max memory limitation\n");
 					exit(1);
 				}
 				break;	
+			}else{
+				// find fields and create record
+				in_mem_rec.push_back(rec);
+				record &last(*(in_mem_rec.end()-1));
+				fromGAISRecord(last, recData, recSize);
+
+				// store pointer to full record if one-pass sort is satisfied
+				last.get<str_ref>("_raw").assign(recData, recSize);
+
+				readCnt += recSize + irs.psize();
+	
 			}
 		}
 	}
