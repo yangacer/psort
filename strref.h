@@ -39,6 +39,10 @@ struct str_ref
 	void
 	clear();
 
+	char const* data() const;
+
+	unsigned int size() const;
+
 	char const* data_;
 	unsigned int size_;
 };

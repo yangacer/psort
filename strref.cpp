@@ -24,6 +24,14 @@ str_ref&
 str_ref::assign(char const* data_beg, char const* data_end)
 {	data_ = data_beg; size_ = data_end - data_beg;	}
 
+char const*
+str_ref::data() const
+{ return data_; }
+
+unsigned int
+str_ref::size() const
+{ return size_; }
+
 void
 str_ref::clear()
 { data_ = 0; size_ = 0; }
