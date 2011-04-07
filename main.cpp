@@ -36,13 +36,14 @@ main(int argc, char ** argv)
 	rschema schema;
 	record_comparator rcmp;
 	
-	irfstream irs; //("@\n@GAIS_Rec:\n", 13, stdin);
+	irfstream irs; 
 	irs.begin_pattern("@\n",2);
 
 	unsigned int MAXMEM = 10 MB;
 	unsigned int RESERVE = 10;
 	unsigned int FILE_SIZE = 0; // zero for unknow size
 	char const* FILENAME = 0;
+	char const* PVFILENAME = "pv.file";
 
 	// ------------ parse arguments and configure -------------
 	for(int i=1; i< argc; ++i){
@@ -83,23 +84,18 @@ main(int argc, char ** argv)
 			char *memSize = argv[i+1];
 			MAXMEM = strtoul(memSize, 0, 10);
 			MAXMEM = (MAXMEM==0)?10 MB : MAXMEM;
-			// printf("Maximum Memory: %d", MAXMEM);
 			switch(tolower(memSize[strlen(memSize)-1]))
 			{
 			case 'g':
 				MAXMEM *= 1 GB;
-				// printf(" G");
 			break;
 			case 'm':
 				MAXMEM *= 1 MB;
-				// printf(" M");
 			break;
 			case 'k':
 				MAXMEM *= 1 KB;
-				// printf(" K");
 			break;
 			}
-			// printf("B\n");
 			i+=1;
 		// reserve
 		}else if(0 == strcmp(argv[i], "-r")){
@@ -110,7 +106,6 @@ main(int argc, char ** argv)
 			RESERVE = atoi(argv[i+1]);
 			RESERVE = (RESERVE <= 0 || RESERVE >= 100)?10 : RESERVE;
 			i++;
-			// printf("Reserved for partition: %d%%\n", RESERVE);
 		}
 		// record begin pattern
 		else if(0 == strcmp(argv[i], "-b")){
@@ -146,6 +141,14 @@ main(int argc, char ** argv)
 			FILENAME = argv[i+1];
 			
 			i++;
+		}else if(0 == strcmp(argv[i], "-p")){
+			if(argc <= i+1){
+				usage();
+				exit(1);
+			}
+			PVFILENAME = argv[i+1];
+			i++;
+
 		}
 	} // ------------- End of command parsing -----------------
 	
@@ -240,17 +243,13 @@ main(int argc, char ** argv)
 		irs.ignore(irs.rdbuf()->in_avail());
 		if(!irs.eof())
 			pivots.pop_back();
-		// std::cout<<str_ref(pivotsBuf, pivotsBufSize)<<"\n";
 	}
 
 	std::cout<<pivots.size()<<" pivots generated\n";
 
 	std::sort(pivots.begin(), pivots.end(), FunctorWrapper<record_comparator>(rcmp));
 	
-	// undefine _raw field for output pivots
-	// schema.undefine_field("_raw");
-	
-	std::ofstream pvfile("pv.file", std::ios::binary);
+	std::ofstream pvfile(PVFILENAME, std::ios::binary);
 	for(int i=0;i<pivots.size();++i){
 		pvfile<<irs.begin_pattern();
 		toGAISRecord(pivots[i], pvfile);

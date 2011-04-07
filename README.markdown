@@ -42,7 +42,7 @@ recommanded.
 
 4. Output - Pivot File and Part File
 ====
-	-p file -P prefix
+	-p file
 After partitioning input data, a pivot file - default name is 
 pv.file - will be genterated. If given -p option, the file will 
 be used as name of pivot file instead.
