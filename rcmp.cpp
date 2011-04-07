@@ -1,8 +1,5 @@
 #include "rcmp.h"
 
-int rcmp_cp_cnt(0);
-
-
 void
 record_comparator::set_key_preference(
 	char const **first_key, char const **last_key,

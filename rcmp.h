@@ -6,7 +6,6 @@
 #include <string>
 #include <functional>
 
-// extern int rcmp_cp_cnt;
 
 template<class F>
 struct FunctorWrapper : public std::binary_function<
@@ -25,16 +24,6 @@ struct FunctorWrapper : public std::binary_function<
 
 struct record_comparator : public std::binary_function<record const&, record const&, bool>
 {
-	/*
-	record_comparator():keys_(), orders_(){}	
-	record_comparator(record_comparator const &cp)
-	:keys_(cp.keys_), orders_(cp.orders_)
-	{
-		rcmp_cp_cnt++;
-		//fprintf(stderr, "rcmp cp cnt:%d\n", rcmp_cp_cnt);
-	}
-	*/
-
 	void
 	set_key_preference(char const** first_key, char const** last_key, 
 		bool* first_order, bool* last_order);
