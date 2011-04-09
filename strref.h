@@ -55,8 +55,6 @@ inline GLOBAL_SBOP_FUNC(std::string,str_ref,==,==)
 inline GLOBAL_SBOP_FUNC(std::string,str_ref,!=,!=)
 
 
-//std::istream &operator>>(std::istream& is, str_ref const& sref);
-
 std::ostream &operator<<(std::ostream& os, str_ref const& sref);
 
 unsigned int
@@ -65,11 +63,19 @@ referenced_count(record const& r);
 unsigned int
 cp_chg_referenced(char *buf, record &r);
 
+void
+cp_strref(std::string &buffer, record &r);
+
+void
+rebuild_ref(std::string &buffer, record *beg, record *end);
+
 template<>
 class field<str_ref> : public absField, public Loki::SmallObject<>
 {
 	friend unsigned int referenced_count(record const& r);
 	friend unsigned int cp_chg_referenced(char *buf, record &r);
+	friend void cp_strref(std::string &buffer, record &r);
+	friend void rebuild_ref(std::string &buffer, record *beg, record *end);
 
 private: // Client never creates field object directly
 	friend class record;

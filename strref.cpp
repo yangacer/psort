@@ -127,6 +127,44 @@ referenced_count(record const& r)
 	return size;
 }
 
+
+void
+cp_strref(std::string &buffer, record &r)
+{
+	record::iterator iter = r.begin();
+	field<str_ref> *p(0);
+	while(iter != r.end()){
+		p = dynamic_cast<field<str_ref>*>(*iter);
+		if(p)
+			buffer.append(p->val_.data_, p->val_.size_);
+		++iter;
+	}
+	
+}
+
+void
+rebuild_ref(std::string &buffer, record *beg, record *end)
+{
+	record *iter = beg;
+	record::iterator fIter;
+	field<str_ref> *p(0);
+	char const *data = buffer.data();
+	unsigned int curPos(0);
+
+	while(iter != end){
+		fIter = iter->begin();
+		while(fIter != iter->end()){
+			p = dynamic_cast<field<str_ref>*>(*fIter);
+			if(p){
+				p->val_.data_ = data + curPos;
+				curPos += p->val_.size_;
+			}
+			++fIter;	
+		}
+		++iter;	
+	}
+}
+
 unsigned int
 cp_chg_referenced(char *buf, record &r)
 {

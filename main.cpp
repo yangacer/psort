@@ -36,7 +36,7 @@ main(int argc, char ** argv)
 	rschema schema;
 	record_comparator rcmp;
 	
-	irfstream irs; 
+	irfstream irs("@\n", 2, stdin, std::ios::in | std::ios::binary, BUFSIZ); 
 	irs.begin_pattern("@\n",2);
 
 	unsigned int MAXMEM = 10 MB;
@@ -54,7 +54,11 @@ main(int argc, char ** argv)
 				exit(1);
 			}
 			try{
-				schema.define_field(argv[i+1], argv[i+2]);
+				if(0 == strcmp(argv[i+2],"STR"))
+					schema.define_field(argv[i+1], "STRREF");
+				else 
+					schema.define_field(argv[i+1], argv[i+2]);
+
 				// key order checking
 				if(argc > i+3){
 					if(argv[i+3][0] == '<'){
@@ -152,10 +156,12 @@ main(int argc, char ** argv)
 		}
 	} // ------------- End of command parsing -----------------
 	
+	
 	if(FILENAME == 0){
 		printf("-f file\n");
 		exit(1);
 	}
+	
 
 	// Setup status
 	printf("Record begin pattern: %s\n", irs.begin_pattern());
@@ -179,13 +185,14 @@ main(int argc, char ** argv)
 		perror("psort(setbuf):");
 		exit(1);
 	}
-	irs.open(FILENAME, std::ios::binary | std::ios::in);
-	if(!irs.is_open()){
-		fprintf(stderr, "Open file (%s) failed\n", FILENAME);
-		usage();
-		exit(1);
+	if(FILE_SIZE){
+		irs.open(FILENAME, std::ios::binary | std::ios::in);
+		if(!irs.is_open()){
+			fprintf(stderr, "Open file (%s) failed\n", FILENAME);
+			usage();
+			exit(1);
+		}
 	}
-	
 
 	// estimate partition count
 	unsigned int pivots_count = FILE_SIZE / streambuf_size;
@@ -202,48 +209,48 @@ main(int argc, char ** argv)
 		"STREAM SIZE: %lu\n", pivots_count, MAXMEM, RESERVE, streambuf_size);
 
 	// ------------- sampling stage (integrate into pmgr latter ---------------
-	char *pivotsBuf(0);
-	unsigned int pivotsBufSize(0);
+	// char *pivotsBuf(0);
+	// unsigned int pivotsBufSize(0);
 	unsigned int recSize(0);
 	char const* recData(0);
+	unsigned int ignoreCnt(0);
 	record rec;
 	schema.make(rec);
 	std::vector<record> pivots;
-	srand(time(0));
-
+	std::string pivotsBuf;
+	
 	while(1){
 		recSize = irs.getrecord(&recData);
 		
-		if(pivots.size() > pivots_count){
-			// select a victim pivot and remove it
-			unsigned int victim = rand() % (pivots.size());
-			pivotsBufSize -= referenced_count(pivots[victim]);
-			pivots.erase(pivots.begin()+victim);
+		if(!irs.fail()){
+			// find fields and create record
+			pivots.push_back(rec);
+			record& last(*(pivots.end()-1));
+			fromGAISRecord(last, recData, recSize);
+			// copy strref data to buffer
+			cp_strref(pivotsBuf, last);
+			ignoreCnt += recSize;
+		}else if(irs.rdbuf()->in_avail() < streambuf_size -1){
+			break;	
 		}
-
-		// find fields and create record
-		pivots.push_back(rec);
-		record& last(*(pivots.end()-1));
-		fromGAISRecord(last, recData, recSize);
-		pivotsBufSize += referenced_count(last);
 		
-		if( irs.fail())
-			break;
+		// ignore all followed in-buffer records
+		while(1){
+			recSize = irs.getrecord(&recData);
+			if(!irs.fail())
+				ignoreCnt += recSize;
+			else{
+				irs.clear();
+				irs.seekg(ignoreCnt, std::ios::cur);
+				irs.research();
+				ignoreCnt = 0;
+				break;
+			}
+		}	
 		
 	}
-
-	// copy data located in irs to pivotsBuf and change str_ref.data_
-	if(pivotsBufSize){
-		pivotsBuf = new char[pivotsBufSize+1];
-		unsigned int copied(0);
-		for(unsigned int i=0; i<pivots.size();++i)
-			copied += cp_chg_referenced(pivotsBuf + copied, pivots[i]);
-		// verify the last record completeness
-		irs.clear();
-		irs.ignore(irs.rdbuf()->in_avail());
-		if(!irs.eof())
-			pivots.pop_back();
-	}
+	
+	rebuild_ref(pivotsBuf, &*pivots.begin(), &*pivots.end());
 
 	std::cout<<pivots.size()<<" pivots generated\n";
 
@@ -255,7 +262,7 @@ main(int argc, char ** argv)
 		toGAISRecord(pivots[i], pvfile);
 	}
 	pvfile.close();
-	printf("psort: Pivots file generated\n");
+	printf("Pivots file generated\n");
 
 	// ------------------ partition stage -------------------
 
@@ -427,10 +434,7 @@ main(int argc, char ** argv)
 
 	// ------------- free stage ---------------------
 	
-
-	if(pivotsBuf){
-		delete [] pivotsBuf;	
-	}
+	
 
 	// ----------- misc test --------------------------
 	
