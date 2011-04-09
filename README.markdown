@@ -2,7 +2,7 @@
 ====
 	-k field_name field_type compare_method [-k ...]
 
-	e.g. ./psort -k '@U:' 'STR' '>' -k '@s:' 'UNIT' '<'
+	e.g. ./psort -k '@U:' 'STR' '>' -k '@s:' 'UINT' '<'
 
 This configuration will let psort compare records' "@U:" 
 fields by string comparison in decending order. 
