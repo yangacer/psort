@@ -209,8 +209,6 @@ main(int argc, char ** argv)
 		"STREAM SIZE: %lu\n", pivots_count, MAXMEM, RESERVE, streambuf_size);
 
 	// ------------- sampling stage (integrate into pmgr latter ---------------
-	// char *pivotsBuf(0);
-	// unsigned int pivotsBufSize(0);
 	unsigned int recSize(0);
 	char const* recData(0);
 	unsigned int ignoreCnt(0);
@@ -270,11 +268,12 @@ main(int argc, char ** argv)
 	std::vector<std::string> fnames;
 	std::vector<record> in_mem_rec;
 
-	// reset irs
-	irs.clear();
-	irs.seekg(0, std::ios::beg);
-	irs.research();
-	
+	// setup new buffer size to irs
+	irs.close();
+	streambuf_size = MAXMEM;
+	irs.rdbuf()->pubsetbuf(streambuf, streambuf_size);
+	irs.open(FILENAME, std::ios::binary);
+
 	// configure partition
 	int fname_digits = (int)ceil(log10((double)fouts.size()));
 	std::stringstream cvt;
@@ -338,21 +337,27 @@ main(int argc, char ** argv)
 						irs.begin_pattern()<<
 						tmp.get<str_ref>("_raw");
 
-					// output size report	
+					// output size report
+					bool overflowFlag = false;
 					for(int i=0;i<fouts.size();++i){
 						double fraction = (size_t)fouts[i]->tellp()/(double)MAXMEM;
-						printf("%s:\t" "%lu\t" "%f\n", 
-							fnames[i].c_str(), 
-							(size_t)fouts[i]->tellp(), 
-							fraction);
-						if(fraction>1){
-							fprintf(stderr,"%s needs to be repartition\n", fnames[i].c_str());
-							exit(1);
+						if(fraction > 1){
+							printf("%s:\t" "%12lu\t" "%f overflowed.", 
+									fnames[i].c_str(), 
+									(size_t)fouts[i]->tellp(), 
+									fraction);
+							overflowFlag = true;
 						}
 					}
-					fprintf(stderr, "psort: Partition done.\n");
+					if(overflowFlag){
+						fprintf(stderr, "Some partition exceeds max memory"
+							" limitation and require repartition\n");
+						return 0;
+					}				
+					
+					fprintf(stderr, "Partition done.\n");
 				}else{
-					fprintf(stderr, "psort: Record size exceeds max memory limitation\n");
+					fprintf(stderr, "Record size exceeds max memory limitation\n");
 					exit(1);
 				}
 				break;	
@@ -386,10 +391,6 @@ main(int argc, char ** argv)
 	// cleanup structures will be used
 	irs.close();
 	in_mem_rec.clear();
-	
-	// setup new buffer size
-	streambuf_size = MAXMEM;
-	irs.rdbuf()->pubsetbuf(streambuf, streambuf_size);
 
 	std::ofstream output("output.file", std::ios::out | std::ios::trunc | std::ios::binary);
 
