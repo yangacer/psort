@@ -71,8 +71,7 @@ main(int argc, char ** argv)
 						rcmp.add_key(argv[i+1], false);
 						i++;
 					}else{
-						usage();
-						exit(1);
+						rcmp.add_key(argv[i+1]);
 					}
 				}else{
 					rcmp.add_key(argv[i+1]);
