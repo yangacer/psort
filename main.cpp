@@ -164,6 +164,7 @@ main(int argc, char ** argv)
 	
 
 	// Setup status
+	schema.define_field("__raw", "STRREF");
 	printf("Record begin pattern: %s\n", irs.begin_pattern());
 
 	// configure partition manager
@@ -290,7 +291,6 @@ main(int argc, char ** argv)
 	
 	// dispatch record to partition
 	unsigned long long readCnt(0);
-	schema.define_field("_raw", "STRREF");
 	schema.make(rec);
 	while(1){
 		recSize = irs.getrecord(&recData);
@@ -301,7 +301,7 @@ main(int argc, char ** argv)
 			fromGAISRecord(last, recData, recSize);
 
 			// store pointer to full record if one-pass sort is satisfied
-			last.get<str_ref>("_raw").assign(recData, recSize);
+			last.get<str_ref>("__raw").assign(recData, recSize);
 			
 			readCnt += recSize + irs.psize();
 		}else{
@@ -314,7 +314,7 @@ main(int argc, char ** argv)
 				// write to file
 				(*fouts[upper - pivots.begin()]) << 
 					irs.begin_pattern()<<
-					(iter->get<str_ref>("_raw"));
+					(iter->get<str_ref>("__raw"));
 			}
 
 			// flush stream
@@ -329,29 +329,35 @@ main(int argc, char ** argv)
 				if(recSize && irs.rdbuf()->in_avail() + 1 < streambuf_size){
 					record tmp(rec);
 					fromGAISRecord(tmp, recData, recSize);
-					tmp.get<str_ref>("_raw").assign(recData, recSize);
+					tmp.get<str_ref>("__raw").assign(recData, recSize);
 					upper = std::upper_bound(pivots.begin(), pivots.end(), tmp, rcmp);
 					
 					// write to file
 					(*fouts[upper - pivots.begin()]) << 
 						irs.begin_pattern()<<
-						tmp.get<str_ref>("_raw");
+						tmp.get<str_ref>("__raw");
 
 					// output size report
 					bool overflowFlag = false;
+					double max_fraction = 0;
 					for(int i=0;i<fouts.size();++i){
 						double fraction = (size_t)fouts[i]->tellp()/(double)MAXMEM;
 						if(fraction > 1){
-							printf("%s:\t" "%12lu\t" "%f overflowed.", 
+							fprintf(stderr, 
+								"%s:\t" "%12lu\t" "%f overflowed.\n", 
 									fnames[i].c_str(), 
 									(size_t)fouts[i]->tellp(), 
 									fraction);
 							overflowFlag = true;
 						}
+						max_fraction = (fraction > max_fraction) ? fraction: max_fraction;
+						
 					}
 					if(overflowFlag){
 						fprintf(stderr, "Some partition exceeds max memory"
-							" limitation and require repartition\n");
+							" limitation and require repartition\n"
+							"Max fraction: %lf\n", max_fraction);
+
 						return 0;
 					}				
 					
@@ -368,7 +374,7 @@ main(int argc, char ** argv)
 				fromGAISRecord(last, recData, recSize);
 
 				// store pointer to full record if one-pass sort is satisfied
-				last.get<str_ref>("_raw").assign(recData, recSize);
+				last.get<str_ref>("__raw").assign(recData, recSize);
 
 				readCnt += recSize + irs.psize();
 	
@@ -411,7 +417,7 @@ main(int argc, char ** argv)
 			fromGAISRecord(last, recData, recSize);
 			
 			// store pointer to full record if one-pass sort is satisfied
-			last.get<str_ref>("_raw").assign(recData, recSize);
+			last.get<str_ref>("__raw").assign(recData, recSize);
 
 			if(irs.fail()){
 				// sort and output
@@ -421,7 +427,7 @@ main(int argc, char ** argv)
 				std::vector<record>::iterator iter = in_mem_rec.begin();
 				while(iter != in_mem_rec.end()){
 					output<<irs.begin_pattern()<<
-						iter->get<str_ref>("_raw");
+						iter->get<str_ref>("__raw");
 					++iter;	
 				}
 				in_mem_rec.clear();
