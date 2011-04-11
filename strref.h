@@ -99,12 +99,11 @@ private: // Client never creates field object directly
 	{ return new field(*this); }
 
 	int 
-	compare(absField const* rhs) const throw(char const*)
+	compare(absField const* rhs, bool sameType = false) const throw(char const*)
 	{
-		field* p = 
-			dynamic_cast<field*>(
-				const_cast<absField*>(rhs)
-			);
+		field* p = (sameType) ? 
+			static_cast<field*>(const_cast<absField*>(rhs))
+			: dynamic_cast<field*>(	const_cast<absField*>(rhs));
 
 		if(0 == p)
 			return -2;
@@ -115,6 +114,7 @@ private: // Client never creates field object directly
 			return 1;
 		return 0;
 	}
+	
 	
 	bool 
 	fromString(char const *cstr, size_t size)
