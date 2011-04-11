@@ -135,7 +135,7 @@ cp_strref(std::string &buffer, record &r)
 	field<str_ref> *p(0);
 	while(iter != r.end()){
 		p = dynamic_cast<field<str_ref>*>(*iter);
-		if(p)
+		if(p && p->val_.size_)
 			buffer.append(p->val_.data_, p->val_.size_);
 		++iter;
 	}
@@ -155,7 +155,7 @@ rebuild_ref(std::string &buffer, record *beg, record *end)
 		fIter = iter->begin();
 		while(fIter != iter->end()){
 			p = dynamic_cast<field<str_ref>*>(*fIter);
-			if(p){
+			if(p && p->val_.size_){
 				p->val_.data_ = data + curPos;
 				curPos += p->val_.size_;
 			}
