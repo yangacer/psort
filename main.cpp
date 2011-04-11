@@ -28,12 +28,15 @@ usage()
 int 
 main(int argc, char ** argv)
 {
+
 	// initiate field factory
 	init_field_factory();
 	field_factory::Instance().Register("STRREF", create_field<str_ref>());
 
 	// Main components within default setting
 	rschema schema;
+	schema.define_field("__raw", "STRREF");
+
 	record_comparator rcmp;
 	
 	irfstream irs("@\n", 2, stdin, std::ios::in | std::ios::binary, BUFSIZ); 
@@ -68,8 +71,11 @@ main(int argc, char ** argv)
 						rcmp.add_key(argv[i+1], false);
 						i++;
 					}else{
-						rcmp.add_key(argv[i+1]);	
+						usage();
+						exit(1);
 					}
+				}else{
+					rcmp.add_key(argv[i+1]);
 				}
 			}catch(char *msg){
 				printf("psort: %s\n", msg);
@@ -164,7 +170,6 @@ main(int argc, char ** argv)
 	
 
 	// Setup status
-	schema.define_field("__raw", "STRREF");
 	printf("Record begin pattern: %s\n", irs.begin_pattern());
 
 	// configure partition manager
@@ -393,11 +398,11 @@ main(int argc, char ** argv)
 		fouts[i] = 0;
 	}
 	fouts.clear();
-	
+
 	// cleanup structures will be used
 	irs.close();
 	in_mem_rec.clear();
-
+	
 	std::ofstream output("output.file", std::ios::out | std::ios::trunc | std::ios::binary);
 
 	// read records
