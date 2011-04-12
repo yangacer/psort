@@ -42,9 +42,9 @@ main(int argc, char ** argv)
 	irfstream irs("@\n", 2, stdin, std::ios::in | std::ios::binary, BUFSIZ); 
 	irs.begin_pattern("@\n",2);
 
-	unsigned int MAXMEM = 10 MB;
-	unsigned int RESERVE = 10;
-	unsigned int FILE_SIZE = 0; // zero for unknow size
+	unsigned long long MAXMEM = 10 MB;
+	unsigned long long RESERVE = 10;
+	unsigned long long FILE_SIZE = 0; // zero for unknow size
 	char const* FILENAME = 0;
 	char const* PVFILENAME = "pv.file";
 
@@ -176,7 +176,7 @@ main(int argc, char ** argv)
 	pmgr.mem_limit(MAXMEM).mem_reserve(RESERVE);
 	
 	// configure irfstream
-	unsigned int streambuf_size = 
+	unsigned long long streambuf_size = 
 		(MAXMEM > 100) ? 
 			MAXMEM - MAXMEM / 100 * RESERVE :
 			MAXMEM - MAXMEM * RESERVE / 100;
@@ -200,18 +200,18 @@ main(int argc, char ** argv)
 	}
 
 	// estimate partition count
-	unsigned int pivots_count = FILE_SIZE / streambuf_size;
+	unsigned long long pivots_count = FILE_SIZE / streambuf_size;
 	if(pivots_count * streambuf_size < FILE_SIZE)
 		pivots_count++;
 
 	// in-memory sortable checking
 	if(streambuf_size > FILE_SIZE)
-		pivots_count = std::numeric_limits<unsigned int>::max();
+		pivots_count = std::numeric_limits<unsigned long long>::max();
 
-	printf(	"PIVOTS_CNT: %lu\t"
-		"MAXMEM: %lu\t"
-		"RESERVE: %lu\t"
-		"STREAM SIZE: %lu\n", pivots_count, MAXMEM, RESERVE, streambuf_size);
+	printf(	"PIVOTS_CNT: %llu\t"
+		"MAXMEM: %llu\t"
+		"RESERVE: %llu\t"
+		"STREAM SIZE: %llu\n", pivots_count, MAXMEM, RESERVE, streambuf_size);
 
 	// ------------- sampling stage (integrate into pmgr latter ---------------
 	unsigned int recSize(0);
