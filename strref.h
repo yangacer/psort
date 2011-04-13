@@ -107,7 +107,6 @@ private: // Client never creates field object directly
 
 		if(0 == p)
 			return -2;
-			//throw "Compare between different type";
 		if(val_ < p->val_)
 			return -1;
 		if(val_ > p->val_)
@@ -115,7 +114,13 @@ private: // Client never creates field object directly
 		return 0;
 	}
 	
-	
+
+	int 
+	compare(absField const* rhs, void* compare, bool sameType = false) const throw(char const*)
+	{
+		return this->compare(rhs, sameType);	
+	}
+
 	bool 
 	fromString(char const *cstr, size_t size)
 	{

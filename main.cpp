@@ -16,6 +16,7 @@
 #include "GAISUtils/record.h"
 #include "GAISUtils/rstream.h"
 #include "GAISUtils/rserialize.h"
+#include "GAISUtils/profiler.h"
 
 #define GB *(1024*1024*1024)
 #define MB *(1024*1024)
@@ -161,7 +162,12 @@ main(int argc, char ** argv)
 		}
 	} // ------------- End of command parsing -----------------
 	
+	profiler myprof;
+
+	myprof.begin("overall");
 	
+	myprof.begin("sample");
+
 	if(FILENAME == 0){
 		printf("-f file\n");
 		exit(1);
@@ -256,6 +262,7 @@ main(int argc, char ** argv)
 	rebuild_ref(pivotsBuf, &*pivots.begin(), &*pivots.end());
 
 	std::cout<<pivots.size()<<" pivots generated\n";
+	std::cout<<"Max record size: "<<irs.maximal_record()<<"\n";
 
 	std::sort(pivots.begin(), pivots.end(), FunctorWrapper<record_comparator>(rcmp));
 	
@@ -266,8 +273,12 @@ main(int argc, char ** argv)
 	}
 	pvfile.close();
 	printf("Pivots file generated\n");
-
+	
+	myprof.end("sample");
+	
 	// ------------------ partition stage -------------------
+
+	myprof.begin("partition");
 
 	std::vector<std::ofstream*> fouts(pivots.size()+1);
 	std::vector<std::string> fnames;
@@ -385,9 +396,16 @@ main(int argc, char ** argv)
 			}
 		}
 	}
+	
+	myprof.end("partition");
 
 	// ------------- internal sorting stage --------
 	
+	myprof.begin("sort");
+	
+	profiler sortProf;
+	sortProf.begin("sort");
+
 	fprintf(stderr, "We assume no repartition in current version!\n");
 	
 	// close and free part files
@@ -402,10 +420,15 @@ main(int argc, char ** argv)
 	irs.close();
 	in_mem_rec.clear();
 	
-	std::ofstream output("output.file", std::ios::out | std::ios::trunc | std::ios::binary);
-
+	char *outputbuffer = new char[1 MB];
+	FunctorWrapper<record_comparator> fwRCmp(rcmp);
+	std::ofstream output;
+	output.rdbuf()->pubsetbuf(outputbuffer, 1 MB);
+	output.open("output.file", std::ios::out | std::ios::trunc | std::ios::binary);
+	
 	// read records
 	for(int i=0; i<fnames.size(); ++i){
+		irs.rdbuf()->pubsetbuf(streambuf, streambuf_size);
 		irs.open(fnames[i].c_str(), std::ios::binary);
 		if(!irs.is_open()){
 			perror("psort(open part file)");
@@ -424,10 +447,10 @@ main(int argc, char ** argv)
 			last.get<str_ref>("__raw").assign(recData, recSize);
 
 			if(irs.fail()){
+				sortProf.begin("std::sort");
 				// sort and output
-				std::stable_sort(in_mem_rec.begin(), in_mem_rec.end(), 
-					FunctorWrapper<record_comparator>(rcmp));
-
+				std::sort(in_mem_rec.begin(), in_mem_rec.end(), fwRCmp);
+				sortProf.end("std::sort");
 				std::vector<record>::iterator iter = in_mem_rec.begin();
 				while(iter != in_mem_rec.end()){
 					output<<irs.begin_pattern()<<
@@ -443,9 +466,16 @@ main(int argc, char ** argv)
 	}
 	output.close();
 
+	sortProf.end("sort");
+	sortProf.dump("sort");
+
+	myprof.end("sort");
+	myprof.end("overall");
+	myprof.dump("overall");
+
 	// ------------- free stage ---------------------
 	
-	
+	delete [] outputbuffer;
 
 	// ----------- misc test --------------------------
 	

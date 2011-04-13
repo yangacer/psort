@@ -6,6 +6,7 @@
 #include <string>
 #include <functional>
 
+extern int count__;
 
 template<class F>
 struct FunctorWrapper : public std::binary_function<
@@ -24,6 +25,13 @@ struct FunctorWrapper : public std::binary_function<
 
 struct record_comparator : public std::binary_function<record const&, record const&, bool>
 {
+	/*
+	record_comparator(){}
+
+	record_comparator(record_comparator const& cp)
+	{ fprintf(stderr, "rcmp copied %d times\n", ++count__); }
+	*/
+
 	void
 	set_key_preference(char const** first_key, char const** last_key, 
 		bool* first_order, bool* last_order);
