@@ -1,8 +1,8 @@
-´ú¸ê  gaisq - /data/workspace/youtube_data/data/gais_rec20110324 (~ 26G)
+æ¸¬è³‡  gaisq - /data/workspace/youtube_data/data/gais_rec20110324 (~ 26G)
 
 #Config 1:
 
-Brief: ¹ï¤T­Ó field °µ sort¡A³Ì¤j buffer 400mb¡A¹w´Á¨C­Ó¤À³Î¦Ü¤Ö¦³ 400(1 - 0.75) = 100 mb
+Brief: å°ä¸‰å€‹ field åš sortï¼Œæœ€å¤§ buffer 400mbï¼Œé æœŸæ¯å€‹åˆ†å‰²è‡³å°‘æœ‰ 400(1 - 0.75) = 100 mb
 
 	time ../psort.exe -f ../gais_rec20110324 -M 400m -r 75 -k '@id:' STR -k '@title:' STR -k '@favoriteCount:' UINT '>'
 
@@ -23,11 +23,11 @@ Brief: ¹ï¤T­Ó field °µ sort¡A³Ì¤j buffer 400mb¡A¹w´Á¨C­Ó¤À³Î¦Ü¤Ö¦³ 400(1 - 0.75)
 	Times of major page faults              : 35
 	Times of minor page faults              : 6728766
 
-Problem: Sort ¸ò partition ¤ñ¨Ò¤£¤Ó¹ïºÙ¡A¶}©l debug/tune
+Problem: Sort è·Ÿ partition æ¯”ä¾‹ä¸å¤ªå°ç¨±ï¼Œé–‹å§‹ debug/tune
 
 #Config 2 (Improvement v1 Failure):
 
-Brief: §ïÅÜ field ¤ñ¸ûªº¶¶§Ç¡A§â favoriteCount ½Õ¨ì title ¤§«e¡A¨ú±o¸û¦nªº¤j¤p¤À§G¡COptmize record ½Æ»s¦¨¥»¡C
+Brief: æ”¹è®Š field æ¯”è¼ƒçš„é †åºï¼ŒæŠŠ favoriteCount èª¿åˆ° title ä¹‹å‰ï¼Œå–å¾—è¼ƒå¥½çš„å¤§å°åˆ†ä½ˆã€‚Optmize record è¤‡è£½æˆæœ¬ã€‚
 
 	time ../psort-s.exe -f ../gais_rec20110324 -M 400m -r 75 -k '@id:' STR -k '@favoriteCount:' UINT -k '@title:' STR
 
@@ -50,15 +50,15 @@ Brief: §ïÅÜ field ¤ñ¸ûªº¶¶§Ç¡A§â favoriteCount ½Õ¨ì title ¤§«e¡A¨ú±o¸û¦nªº¤j¤p¤À
 
 Problem: 
 
-- ¤ñ¨ÒÁöµM­°§C¡A¦ı¤´¦³®t¶Z¡CTune ¹L«áµo¥Í memory leak (sovled in the next version)
+- æ¯”ä¾‹é›–ç„¶é™ä½ï¼Œä½†ä»æœ‰å·®è·ã€‚Tune éå¾Œç™¼ç”Ÿ memory leak (sovled in the next version)
 
-- std::sort ¤£ª¾¬°¦ó¤ñ std::stable_sort ºC¡A¤§«á³£§ï¥Î stable_sort
+- std::sort ä¸çŸ¥ç‚ºä½•æ¯” std::stable_sort æ…¢ï¼Œä¹‹å¾Œéƒ½æ”¹ç”¨ stable_sort
 
-- Page fault ¼Æ¶q¡C
+- Page fault æ•¸é‡ã€‚
 	
 #Config 3: (Improvement v2)
 
-Brief: ¸Ñ¨M memory leak ¨Ã¦A­°§C sort ¦¨¥» (record::compare tuned)
+Brief: è§£æ±º memory leak ä¸¦å†é™ä½ sort æˆæœ¬ (record::compare tuned)
 
 	time ../psort-ng.exe -f ../gais_rec20110324 -M 400m -r 75 -k '@id:' STR -k '@favoriteCount:' UINT -k '@title:' STR
 
@@ -81,15 +81,15 @@ Brief: ¸Ñ¨M memory leak ¨Ã¦A­°§C sort ¦¨¥» (record::compare tuned)
 
 Problem: 
 
-- ¦A«×­°§C¤ñ¨Ò¤£¹ïºÙ±¡§Î¡AµM¦Ó¤´ªá¤F¤Ó¦h®É¶¡¦b user mode¡C
+- å†åº¦é™ä½æ¯”ä¾‹ä¸å°ç¨±æƒ…å½¢ï¼Œç„¶è€Œä»èŠ±äº†å¤ªå¤šæ™‚é–“åœ¨ user modeã€‚
 
-- Minor page fault ¤U­°¡AMajor ¼W¥[¡C
+- Minor page fault ä¸‹é™ï¼ŒMajor å¢åŠ ã€‚
 
 #Config 4:
 
-Brief: ¼W¥[°O¾ĞÅé¨Ï¥Î¶q¦Ü 800mb ¡A¹w´Áªº¤À³Î¤j¤p¬° 180mb¡A¤ñ¸û·sÂÂª© record comparator ªº®Ä¯à®t²§¡C
+Brief: å¢åŠ è¨˜æ†¶é«”ä½¿ç”¨é‡è‡³ 800mb ï¼Œé æœŸçš„åˆ†å‰²å¤§å°ç‚º 180mbï¼Œæ¯”è¼ƒæ–°èˆŠç‰ˆ record comparator çš„æ•ˆèƒ½å·®ç•°ã€‚
 
-##ÂÂª© comparator
+##èˆŠç‰ˆ comparator
 	time ../psort-ocmp.exe -f ../gais_rec20110324 -M 800m -r 88 -k '@id:' STR -k '@favoriteCount:' UINT -k '@title:' STR
 	
 	PIVOTS_CNT: 274 MAXMEM: 838860800       RESERVE: 88     STREAM SIZE: 100663296
@@ -109,7 +109,7 @@ Brief: ¼W¥[°O¾ĞÅé¨Ï¥Î¶q¦Ü 800mb ¡A¹w´Áªº¤À³Î¤j¤p¬° 180mb¡A¤ñ¸û·sÂÂª© record comp
 	Times of major page faults              : 61
 	Times of minor page faults              : 5497791
 	
-##·sª© comparator
+##æ–°ç‰ˆ comparator
 	time ../psort-fcmp.exe -f ../gais_rec20110324 -M 800m -r 88 -k '@id:' STR -k '@favoriteCount:' UINT -k '@title:' STR
 
 	PIVOTS_CNT: 274 MAXMEM: 838860800       RESERVE: 88     STREAM SIZE: 100663296
