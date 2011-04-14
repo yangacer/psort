@@ -2,6 +2,7 @@
 #define _RCMP_H_
 
 #include "GAISUtils/record.h"
+#include "GAISUtils/rschema.h"
 #include <vector>
 #include <string>
 #include <functional>
@@ -47,10 +48,24 @@ struct record_comparator : public std::binary_function<record const&, record con
 	
 	void
 	reset();
-private:
+	
+
+protected:
 	std::vector<std::string> keys_;
 	std::vector<bool> orders_;
-		
+};
+
+struct fast_rec_cmp : public record_comparator
+{
+	void
+	cache(rschema const& rs);
+
+	bool
+	operator()(record const &lhs, record const &rhs) const;
+
+private:
+	std::vector<FIELD_INDEX> kIdx_;
+	record cache_;
 };
 
 #endif

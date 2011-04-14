@@ -98,6 +98,12 @@ private: // Client never creates field object directly
 	Clone() const
 	{ return new field(*this); }
 
+	
+	void
+	Clone(absField* f) const
+	{ new (f) field<str_ref>(*this); }
+	
+
 	int 
 	compare(absField const* rhs, bool sameType = false) const throw(char const*)
 	{

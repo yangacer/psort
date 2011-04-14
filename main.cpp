@@ -39,7 +39,8 @@ main(int argc, char ** argv)
 	schema.define_field("__raw", "STRREF");
 
 	record_comparator rcmp;
-	
+	fast_rec_cmp frcmp;
+
 	irfstream irs("@\n", 2, stdin, std::ios::in | std::ios::binary, BUFSIZ); 
 	irs.begin_pattern("@\n",2);
 
@@ -67,15 +68,19 @@ main(int argc, char ** argv)
 				if(argc > i+3){
 					if(argv[i+3][0] == '<'){
 						rcmp.add_key(argv[i+1], true);
+						frcmp.add_key(argv[i+1], true);
 						i++;
 					}else if(argv[i+3][0] == '>'){
 						rcmp.add_key(argv[i+1], false);
+						frcmp.add_key(argv[i+1], false);
 						i++;
 					}else{
 						rcmp.add_key(argv[i+1]);
+						frcmp.add_key(argv[i+1]);
 					}
 				}else{
 					rcmp.add_key(argv[i+1]);
+					frcmp.add_key(argv[i+1]);
 				}
 			}catch(char *msg){
 				printf("psort: %s\n", msg);
@@ -421,11 +426,14 @@ main(int argc, char ** argv)
 	in_mem_rec.clear();
 	
 	char *outputbuffer = new char[1 MB];
-	FunctorWrapper<record_comparator> fwRCmp(rcmp);
+	
+	
 	std::ofstream output;
 	output.rdbuf()->pubsetbuf(outputbuffer, 1 MB);
 	output.open("output.file", std::ios::out | std::ios::trunc | std::ios::binary);
 	
+	frcmp.cache(schema);
+
 	// read records
 	for(int i=0; i<fnames.size(); ++i){
 		irs.rdbuf()->pubsetbuf(streambuf, streambuf_size);
@@ -447,10 +455,9 @@ main(int argc, char ** argv)
 			last.get<str_ref>("__raw").assign(recData, recSize);
 
 			if(irs.fail()){
-				sortProf.begin("std::sort");
 				// sort and output
-				std::sort(in_mem_rec.begin(), in_mem_rec.end(), fwRCmp);
-				sortProf.end("std::sort");
+				std::stable_sort(in_mem_rec.begin(), in_mem_rec.end(), 
+					FunctorWrapper<fast_rec_cmp>(frcmp));
 				std::vector<record>::iterator iter = in_mem_rec.begin();
 				while(iter != in_mem_rec.end()){
 					output<<irs.begin_pattern()<<
