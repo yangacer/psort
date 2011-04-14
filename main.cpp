@@ -310,6 +310,7 @@ main(int argc, char ** argv)
 	}
 	
 	// dispatch record to partition
+	std::vector<size_t> size_dist(fouts.size());
 	unsigned long long readCnt(0);
 	schema.make(rec);
 	while(1){
@@ -362,6 +363,8 @@ main(int argc, char ** argv)
 					double max_fraction = 0;
 					for(int i=0;i<fouts.size();++i){
 						double fraction = (size_t)fouts[i]->tellp()/(double)MAXMEM;
+						// store size to be used in internal sort stage
+						size_dist[i] = (size_t)fouts[i]->tellp();
 						if(fraction > 1){
 							fprintf(stderr, 
 								"%s:\t" "%12lu\t" "%f overflowed.\n", 
@@ -427,7 +430,6 @@ main(int argc, char ** argv)
 	
 	char *outputbuffer = new char[1 MB];
 	
-	
 	std::ofstream output;
 	output.rdbuf()->pubsetbuf(outputbuffer, 1 MB);
 	output.open("output.file", std::ios::out | std::ios::trunc | std::ios::binary);
@@ -453,7 +455,9 @@ main(int argc, char ** argv)
 			
 			// store pointer to full record if one-pass sort is satisfied
 			last.get<str_ref>("__raw").assign(recData, recSize);
-
+			
+			// TODO collect followed files if buffer is not full
+			
 			if(irs.fail()){
 				// sort and output
 				std::stable_sort(in_mem_rec.begin(), in_mem_rec.end(), 
