@@ -85,7 +85,7 @@ Problem:
 
 - Minor page fault 下降，Major 增加。
 
-#Config 4:
+#Config 4: (record_comparator v.s. fast_rec_cmp)
 
 Brief: 增加記憶體使用量至 800mb ，預期的分割大小為 180mb，比較新舊版 record comparator 的效能差異。
 
@@ -116,11 +116,10 @@ Brief: 增加記憶體使用量至 800mb ，預期的分割大小為 180mb，比
 	278 pivots generated
 	Max record size: 45727
 
-	sort: 1495.188266
-	partition: 972.824988 37.7694%
-	sample: 107.663347 4.17997%
-	sort: 1495.207545 58.0506%
-	overall: 2575.695900
+	partition: 	972.824988 	37.7694%
+	sample: 	107.663347 	4.17997%
+	sort: 		1495.207545 	58.0506%
+	overall: 	2575.695900
 
 	Time spent in user mode   (CPU seconds) : 1854.316s
 	Time spent in kernel mode (CPU seconds) : 253.025s
@@ -129,3 +128,28 @@ Brief: 增加記憶體使用量至 800mb ，預期的分割大小為 180mb，比
 	Times the process was swapped           : 0
 	Times of major page faults              : 48
 	Times of minor page faults              : 5618849
+
+#Config 5: std::allocator(GCC) v.s. Loki::SmallObject
+
+Brief: Previous configurations are run under Loki::SmallObject, here I give a std::allocator version.
+
+	time ../psort-stdalloc.exe -f ../gais_rec20110324 -M 800m -r 88 -k '@id:' STR -k '@favoriteCount:' UINT -k '@title:' STR
+	Record begin pattern: @
+
+	PIVOTS_CNT: 274 MAXMEM: 838860800       RESERVE: 88     STREAM SIZE: 100663296
+	278 pivots generated
+	Max record size: 45727
+	
+	partition:	993.061641 	37.3725%
+	sample: 	117.946805 	4.43876%
+	sort: 		1546.191530 	58.1887%
+	overall: 	2657.200263
+
+	Time spent in user mode   (CPU seconds) : 1892.621s
+	Time spent in kernel mode (CPU seconds) : 280.561s
+	Total time                              : 44:17.34s
+	CPU utilisation (percentage)            : 81.7%
+	Times the process was swapped           : 0
+	Times of major page faults              : 201
+	Times of minor page faults              : 5083109
+
