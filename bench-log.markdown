@@ -134,7 +134,6 @@ Brief: 增加記憶體使用量至 800mb ，預期的分割大小為 180mb，比
 Brief: Previous configurations are run under Loki::SmallObject, here I give a std::allocator version.
 
 	time ../psort-stdalloc.exe -f ../gais_rec20110324 -M 800m -r 88 -k '@id:' STR -k '@favoriteCount:' UINT -k '@title:' STR
-	Record begin pattern: @
 
 	PIVOTS_CNT: 274 MAXMEM: 838860800       RESERVE: 88     STREAM SIZE: 100663296
 	278 pivots generated
@@ -152,4 +151,29 @@ Brief: Previous configurations are run under Loki::SmallObject, here I give a st
 	Times the process was swapped           : 0
 	Times of major page faults              : 201
 	Times of minor page faults              : 5083109
+
+#Config 6: Big Improvement via [Yaks Library](https://github.com/yangacer/Yaks) 
+## 為了使用 Yaks, psort 有小幅度的修改，這些修改並未遞交到 github 上
+## psort is modified to adapt Yaks. Though, these modification are not committed to github.
+
+Brief: Sort time is reduced largely by avoiding dynamic cast. This configuration is __1.8 times faster__ than previous ones.
+
+	time ../psort-yaks.exe -f ../gais_rec20110324 -M 800m -r 88 -k '@id:' STR -k '@favoriteCount:' UINT -k '@title:' STR
+	
+	PIVOTS_CNT: 274 MAXMEM: 838860800       RESERVE: 88     STREAM SIZE: 100663296
+	278 pivots generated
+	Max record size: 45727
+	
+	partition: 	513.631853 	35.3575%
+	sample: 	109.596992 	7.54446%
+	sort: 		829.452233 	57.098%
+	overall: 	1452.681098
+
+	Time spent in user mode   (CPU seconds) : 671.065s
+	Time spent in kernel mode (CPU seconds) : 218.309s
+	Total time                              : 24:12.77s
+	CPU utilisation (percentage)            : 61.2%
+	Times the process was swapped           : 0
+	Times of major page faults              : 61
+	Times of minor page faults              : 2356544
 
