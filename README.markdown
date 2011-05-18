@@ -10,7 +10,7 @@ If the field of two records are equal, then psort will
 compare "@s:" fields by numerical comparison in accending 
 order.
 
-__Notice__ the order of -k options is the preference of keys.
+__Note__ the order of -k options is the preference of keys.
 
 See section - Supported Type - for more information about 
 field type.
@@ -32,11 +32,8 @@ in the first phase, to reduce probability of repartition.
 	LLONG	- long long integer
 	DOUBLE  - double float
 	STR 	- string
-	STRREF*	- string reference for eliminating copy
 
-*Internal type supported by psort but not GAISUtils::record.
-
-__Notice__ the STR type introduces greater data movement due
+__Note__ the STR type introduces greater data movement due
 to copy semantic maintainence. In case of psort, __STRREF__ is 
 recommanded.
 
